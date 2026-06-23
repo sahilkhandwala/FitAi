@@ -6,7 +6,7 @@ Context loaders (for system-prompt injection) are plain functions in CONTEXT_LOA
 
 Startup sequence (called by main.py before any agent invocation):
     from bot.agents.tool_registry import init_tools, init_bot
-    init_tools(session)
+    init_tools(session, main_loop=loop)
     init_bot(app)
 """
 
@@ -32,12 +32,15 @@ LA = ZoneInfo("America/Los_Angeles")
 
 _session: Session | None = None
 _bot_app = None
+_main_loop: object | None = None  # asyncio.AbstractEventLoop stored at startup
 
 
-def init_tools(session: Session) -> None:
-    """Set the shared DB session. Must be called at startup before any tool invocation."""
-    global _session
+def init_tools(session: Session, main_loop=None) -> None:
+    """Set the shared DB session and event loop. Call at startup."""
+    global _session, _main_loop
     _session = session
+    if main_loop is not None:
+        _main_loop = main_loop
 
 
 def init_bot(app) -> None:
@@ -377,17 +380,19 @@ def send_telegram_msg(message: str) -> str:
     Send a Telegram message to the configured chat.
     Returns 'sent' on success.
 
-    Note: asyncio.get_event_loop().run_until_complete() will raise RuntimeError
-    if called from within an already-running event loop (e.g. inside an async
-    Telegram handler). In that context, use asyncio.ensure_future or schedule
-    via the bot's job queue instead. This is a known limitation of this approach.
+    Called from agent tool nodes, which run in a thread executor when invoked
+    from an async handler. Uses run_coroutine_threadsafe to hand the coroutine
+    back to the main event loop without blocking it.
     """
     if _bot_app is None:
         raise RuntimeError("Bot app not initialised — call init_bot(app) at startup")
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        _bot_app.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message)
+    if _main_loop is None:
+        raise RuntimeError("Event loop not initialised — call init_tools(session, main_loop=loop) at startup")
+    future = asyncio.run_coroutine_threadsafe(
+        _bot_app.bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message),
+        _main_loop,
     )
+    future.result(timeout=15)
     return "sent"
 
 
