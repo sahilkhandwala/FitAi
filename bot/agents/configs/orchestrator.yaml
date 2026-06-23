@@ -11,6 +11,7 @@ tools:
   - query_knowledge_base
   - ask_web_search_permission
   - send_telegram_msg
+  - route_to_agent
 triggers:
   - text
   - command

@@ -169,3 +169,21 @@ class TestSaveMealAnalysis:
         assert len(meals) == 1
         assert meals[0].meal_type == "lunch"
         assert meals[0].score == 48
+
+
+class TestRouteToAgent:
+    def test_route_to_agent_returns_name(self):
+        from bot.agents.tool_registry import route_to_agent
+        result = route_to_agent.invoke({"agent_name": "HealthExtractorAgent"})
+        assert result == "HealthExtractorAgent"
+
+    def test_route_to_agent_in_registry(self):
+        from bot.agents.tool_registry import TOOL_REGISTRY
+        assert "route_to_agent" in TOOL_REGISTRY
+
+    def test_agent_name_to_trigger_mapping(self):
+        from bot.agents.tool_registry import AGENT_NAME_TO_TRIGGER
+        assert AGENT_NAME_TO_TRIGGER["MealAnalyzerAgent"] == "photo"
+        assert AGENT_NAME_TO_TRIGGER["HealthExtractorAgent"] == "lab_report"
+        assert AGENT_NAME_TO_TRIGGER["KnowledgeIngestorAgent"] == "research_article"
+        assert AGENT_NAME_TO_TRIGGER["HealthInsightsAgent"] == "health_question"

@@ -391,6 +391,18 @@ def send_telegram_msg(message: str) -> str:
     return "sent"
 
 
+@tool
+def route_to_agent(agent_name: str) -> str:
+    """
+    Signal the handler to invoke a specialist agent.
+    Call this whenever routing to a specialist instead of answering directly.
+    Valid values: 'MealAnalyzerAgent', 'HealthExtractorAgent',
+                  'KnowledgeIngestorAgent', 'HealthInsightsAgent'.
+    Returns agent_name so the handler can read it from the tool call args.
+    """
+    return agent_name
+
+
 # ---------------------------------------------------------------------------
 # Indian food tool
 # ---------------------------------------------------------------------------
@@ -468,7 +480,15 @@ TOOL_REGISTRY: dict[str, object] = {
     "ask_web_search_permission": ask_web_search_permission,
     "confirm_with_user": confirm_with_user,
     "send_telegram_msg": send_telegram_msg,
+    "route_to_agent": route_to_agent,
     "get_indian_food": get_indian_food,
+}
+
+AGENT_NAME_TO_TRIGGER: dict[str, str] = {
+    "MealAnalyzerAgent": "photo",
+    "HealthExtractorAgent": "lab_report",
+    "KnowledgeIngestorAgent": "research_article",
+    "HealthInsightsAgent": "health_question",
 }
 
 # ---------------------------------------------------------------------------
