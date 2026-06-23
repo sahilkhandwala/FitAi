@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 from cachetools import TTLCache
 from langchain_core.messages import HumanMessage
 
-from bot.cache import clear_paused_agent, set_paused_agent
+from bot.cache import clear_paused_agent, is_onboarding_complete, set_paused_agent
 from config import TELEGRAM_CHAT_ID
 
 if TYPE_CHECKING:
@@ -61,6 +61,12 @@ async def handle_photo(update: "Update", context: "ContextTypes.DEFAULT_TYPE") -
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
     if update.message.chat_id != TELEGRAM_CHAT_ID:
+        return
+
+    if not is_onboarding_complete():
+        await update.message.reply_text(
+            "Hey Sahil! 👋 Let me set you up first — send me a message and I'll walk you through a quick setup."
+        )
         return
 
     photo = update.message.photo[-1]
@@ -171,7 +177,7 @@ async def handle_meal_type_callback(
     }
 
     thread_id = f"meal-{TELEGRAM_CHAT_ID}"
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     try:
         await loop.run_in_executor(
@@ -183,7 +189,7 @@ async def handle_meal_type_callback(
             text=f"Got it! Your {meal_type} has been logged 📷",
         )
         # Fire PatternDetectorAgent in background (non-blocking)
-        asyncio.ensure_future(_run_pattern_detector(loop))
+        asyncio.ensure_future(_run_pattern_detector())
 
     except GraphInterrupt as exc:
         interrupt_msg = exc.interrupts[0].value if exc.interrupts else "Can I search the web?"
@@ -197,7 +203,7 @@ async def handle_meal_type_callback(
         set_paused_agent("photo")
 
 
-async def _run_pattern_detector(loop: asyncio.AbstractEventLoop) -> None:
+async def _run_pattern_detector() -> None:
     """Invoke PatternDetectorAgent after a meal is saved. Fire-and-forget."""
     from bot.agents.agent_loader import AGENT_REGISTRY
 
@@ -213,6 +219,7 @@ async def _run_pattern_detector(loop: asyncio.AbstractEventLoop) -> None:
         "analysis_result": None,
         "next_agent": None,
     }
+    loop = asyncio.get_running_loop()
     try:
         await loop.run_in_executor(None, lambda: agent.invoke(state))
     except Exception as e:
