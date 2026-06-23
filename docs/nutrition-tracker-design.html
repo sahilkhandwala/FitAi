@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nutrition Tracker — Design Spec</title>
+  <style>
+    :root {
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --green-mid: #86efac;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --amber: #d97706;
+      --amber-light: #fef3c7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-400: #9ca3af;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --sidebar-w: 260px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--gray-800);
+      background: var(--gray-50);
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    nav {
+      width: var(--sidebar-w);
+      min-height: 100vh;
+      background: var(--gray-900);
+      color: #d1d5db;
+      position: fixed;
+      top: 0; left: 0;
+      overflow-y: auto;
+      padding: 24px 0 40px;
+    }
+
+    nav .logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #374151;
+      margin-bottom: 16px;
+    }
+    nav .logo span {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--gray-400);
+      margin-bottom: 4px;
+    }
+    nav .logo strong {
+      font-size: 14px;
+      color: #f9fafb;
+      line-height: 1.3;
+    }
+
+    nav a {
+      display: block;
+      padding: 6px 20px;
+      font-size: 13px;
+      color: #9ca3af;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+    }
+    nav a:hover { color: #f9fafb; background: #1f2937; border-left-color: var(--green); }
+    nav .nav-section {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #4b5563;
+      padding: 16px 20px 4px;
+      font-weight: 600;
+    }
+
+    /* ── Main ── */
+    main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      padding: 48px 56px 80px;
+      max-width: 960px;
+    }
+
+    /* ── Typography ── */
+    h1 { font-size: 28px; font-weight: 700; color: var(--gray-900); margin-bottom: 6px; }
+    h2 { font-size: 20px; font-weight: 700; color: var(--gray-900); margin: 48px 0 16px; padding-top: 48px; border-top: 2px solid var(--gray-200); }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 24px; }
+    h3 { font-size: 16px; font-weight: 600; color: var(--gray-800); margin: 28px 0 10px; }
+    h4 { font-size: 14px; font-weight: 600; color: var(--gray-700); margin: 20px 0 8px; }
+    p { margin-bottom: 12px; color: var(--gray-700); }
+    ul, ol { padding-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 4px; color: var(--gray-700); }
+    strong { color: var(--gray-900); }
+
+    .subtitle { color: var(--gray-500); font-size: 14px; margin-bottom: 4px; }
+    .date { color: var(--gray-400); font-size: 13px; margin-bottom: 32px; }
+
+    /* ── North Star ── */
+    .north-star {
+      background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 24px 0 32px;
+    }
+    .north-star .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--green-mid);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .north-star h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      margin: 0 0 12px;
+      border: none;
+      padding: 0;
+    }
+    .north-star ul { padding-left: 18px; margin: 0; }
+    .north-star li { color: #bbf7d0; font-size: 14px; margin-bottom: 5px; }
+
+    /* ── Pending decision ── */
+    .pending {
+      background: var(--amber-light);
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #92400e;
+      margin: 12px 0;
+    }
+    .pending strong { color: #78350f; }
+
+    /* ── Tables ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; font-size: 13.5px; }
+    th { background: var(--gray-100); text-align: left; padding: 9px 12px; font-weight: 600; color: var(--gray-700); border-bottom: 2px solid var(--gray-200); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
+    td { padding: 9px 12px; border-bottom: 1px solid var(--gray-200); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--gray-50); }
+
+    /* ── Code ── */
+    pre {
+      background: var(--gray-900);
+      color: #e5e7eb;
+      border-radius: 8px;
+      padding: 18px 20px;
+      font-size: 12.5px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      line-height: 1.6;
+    }
+    code {
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: var(--gray-100);
+      color: var(--green);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+    }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .badge-green { background: var(--green-light); color: #15803d; }
+    .badge-blue  { background: var(--blue-light);  color: #1d4ed8; }
+    .badge-amber { background: var(--amber-light);  color: #b45309; }
+    .badge-gray  { background: var(--gray-100);    color: var(--gray-600); }
+
+    /* ── Feature cards ── */
+    .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0 24px; }
+    .feature-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .feature-card .num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--green);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+    .feature-card h4 { margin: 0 0 6px; font-size: 14px; color: var(--gray-900); }
+    .feature-card p { font-size: 13px; color: var(--gray-600); margin: 0; line-height: 1.5; }
+
+    /* ── Agent roster ── */
+    .agent-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .agent-card .agent-name { font-weight: 700; font-size: 14px; color: var(--gray-900); margin-bottom: 4px; }
+    .agent-card .agent-trigger { font-size: 12px; color: var(--gray-500); margin-bottom: 6px; }
+    .agent-card .tools { font-size: 12px; }
+    .agent-card .tools span {
+      display: inline-block;
+      background: var(--gray-100);
+      color: var(--gray-700);
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin: 2px 2px 0 0;
+      font-family: 'SF Mono', Consolas, monospace;
+    }
+
+    /* ── Phase blocks ── */
+    .phase {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 16px;
+    }
+    .phase-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .phase-num {
+      width: 32px; height: 32px;
+      background: var(--green);
+      color: white;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; flex-shrink: 0;
+    }
+    .phase-title { font-weight: 700; font-size: 15px; color: var(--gray-900); }
+    .phase-subtitle { font-size: 12px; color: var(--gray-500); }
+    .phase ul { margin: 0; }
+    .phase li { font-size: 13.5px; }
+
+    /* ── Cron table ── */
+    .cron { font-family: 'SF Mono', Consolas, monospace; font-size: 12px; color: var(--blue); }
+
+    /* ── Schema ── */
+    .schema-table th { font-family: 'SF Mono', Consolas, monospace; font-size: 11.5px; }
+    .schema-table td { font-size: 13px; }
+    .schema-table td:first-child { font-family: 'SF Mono', Consolas, monospace; color: var(--green); font-size: 12px; }
+
+    /* ── Stack cost ── */
+    .cost-banner {
+      background: var(--blue-light);
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 24px;
+      font-size: 14px;
+      color: #1e40af;
+    }
+    .cost-banner .amount { font-size: 22px; font-weight: 800; }
+
+    /* ── Flow timeline ── */
+    .flow-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+    .flow-row:last-child { border-bottom: none; }
+    .flow-time { font-weight: 700; font-size: 13px; color: var(--gray-700); width: 110px; flex-shrink: 0; }
+    .flow-name code { font-size: 13px; }
+    .flow-desc { font-size: 13px; color: var(--gray-600); flex: 1; }
+
+    /* ── Tone examples ── */
+    .tone-good, .tone-bad {
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+    .tone-good { background: var(--green-light); border-left: 4px solid var(--green); color: #166534; }
+    .tone-bad  { background: var(--red-light);   border-left: 4px solid var(--red);   color: #991b1b; }
+    .tone-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--gray-200); margin: 32px 0; }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .feature-grid { grid-template-columns: 1fr; }
+      main { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════ -->
+<nav>
+  <div class="logo">
+    <span>Design Spec</span>
+    <strong>🥗 Nutrition Tracker Bot</strong>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <a href="#goal">North Star Goal</a>
+  <a href="#architecture">Architecture</a>
+  <a href="#stack">Tech Stack</a>
+
+  <div class="nav-section">Agents</div>
+  <a href="#agents">Agent Roster</a>
+  <a href="#routing">Routing Logic</a>
+
+  <div class="nav-section">Features</div>
+  <a href="#f1">1. Meal Photo Logging</a>
+  <a href="#f2">2. Health Profile Upload</a>
+  <a href="#f3">3. Morning Briefing</a>
+  <a href="#f4">4. Missed Meal Alerts</a>
+  <a href="#f5">5. Daily Meal Summary</a>
+  <a href="#f6">6. Pattern Detection</a>
+  <a href="#f7">7. General Conversation</a>
+  <a href="#f8">8. Health Insights Q&amp;A</a>
+  <a href="#f9">9. Weekly Report</a>
+  <a href="#f10">10. Episodic → Semantic Memory</a>
+  <a href="#f11">11. User Onboarding</a>
+
+  <div class="nav-section">Data</div>
+  <a href="#knowledge">Knowledge Base</a>
+  <a href="#schema">SQLite Schema</a>
+  <a href="#caching">Caching Strategy</a>
+
+  <div class="nav-section">Operations</div>
+  <a href="#flows">Prefect Flows</a>
+  <a href="#tone">Message Tone</a>
+  <a href="#commands">Bot Commands</a>
+  <a href="#structure">Project Structure</a>
+
+  <div class="nav-section">Build Plan</div>
+  <a href="#phases">7-Phase Plan</a>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════ -->
+<main>
+
+  <p class="subtitle">Standalone Telegram Bot</p>
+  <h1>🥗 Nutrition Tracker — Design Spec</h1>
+  <p class="date">Date: 2026-05-25 &nbsp;·&nbsp; Replaces: jolly-whistling-nebula.md</p>
+
+  <!-- ── GOAL ── -->
+  <div id="goal" class="north-star">
+    <div class="label">⭐ North Star</div>
+    <h2>Help Sahil reduce A1C, lower LDL cholesterol, increase HDL, and stay physically fit.</h2>
+    <ul>
+      <li>Make it effortless to log what Sahil eats — no gaps in the data</li>
+      <li>Surface patterns and correlations between food choices and health markers</li>
+      <li>Deliver personalised, actionable nudges grounded in actual logged history</li>
+      <li>Keep Sahil on track toward his long-term health targets, not just report on the past</li>
+    </ul>
+  </div>
+
+  <p>Every message, every nudge, every report should connect back to this north star. The bot is not a meal logger — it is an active health accountability partner.</p>
+
+  <!-- ── ARCHITECTURE ── -->
+  <h2 id="architecture">Architecture Overview</h2>
+  <p>Two-process Python application on a single GCP VM, sharing a local SQLite database.</p>
+  <pre><code>Process 1: Bot (python-telegram-bot v20+)
+  └── Handles all real-time Telegram interactions
+
+Process 2: Prefect Flows (scheduled jobs)
+  └── 5 Prefect flows with scheduling, retries, and observability
+
+Shared:
+  ├── SQLite (WAL mode) — meal data, health profile, reports, LangGraph state
+  ├── knowledge_base/   — JSON files, one per ingested research article
+  ├── cachetools TTLCache — media group buffering (2s), health profile (1hr)
+  └── diskcache          — callout dedup (24hr), Fitbit token rotation</code></pre>
+
+  <!-- ── STACK ── -->
+  <h2 id="stack">Tech Stack</h2>
+
+  <div class="cost-banner">
+    <div class="amount">~$12</div>
+    <div>per month total infra cost — e2-small VM only, no managed database</div>
+  </div>
+
+  <table>
+    <thead><tr><th>Layer</th><th>Choice</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Language</td><td>Python 3.11+</td><td></td></tr>
+      <tr><td>Telegram</td><td><code>python-telegram-bot</code> v20+</td><td>Async, built-in JobQueue</td></tr>
+      <tr><td>Multi-agent</td><td>LangGraph v0.4+ + <code>langchain-anthropic</code></td><td>DAG-based agent routing</td></tr>
+      <tr><td>LLM — heavy</td><td>Claude Opus 4.8 (<code>claude-opus-4-8</code>)</td><td>WeeklyReportAgent, HealthInsightsAgent</td></tr>
+      <tr><td>LLM — mid</td><td>Claude Sonnet 4.6 (<code>claude-sonnet-4-6</code>)</td><td>MealAnalyzerAgent, HealthExtractorAgent, KnowledgeIngestorAgent</td></tr>
+      <tr><td>LLM — fast</td><td>Claude Haiku 4.5 (<code>claude-haiku-4-5-20251001</code>)</td><td>OrchestratorAgent, PatternDetectorAgent, DailySummaryAgent, flows</td></tr>
+      <tr><td>Web search</td><td>Claude built-in <code>web_search_20250305</code></td><td>Permission required before each use</td></tr>
+      <tr><td>Database</td><td>SQLite (WAL mode)</td><td>On-VM, zero cost, single-user safe</td></tr>
+      <tr><td>Knowledge base</td><td>JSON files (<code>knowledge_base/</code>)</td><td>Structured extraction — Claude extracts findings once at ingest, ~6k tokens total</td></tr>
+      <tr><td>In-memory cache</td><td><code>cachetools</code></td><td>TTLCache — media buffer 2s, health profile 1hr</td></tr>
+      <tr><td>Persistent cache</td><td><code>diskcache</code> (SQLite-backed)</td><td>Callout dedup 24hr, Fitbit token</td></tr>
+      <tr><td>Fitbit</td><td>Fitbit Web API</td><td>Existing developer app credentials</td></tr>
+      <tr><td>Weather</td><td>Open-Meteo (<code>openmeteo-requests</code>)</td><td>Free, no API key, lat 37.3861 lon -122.0839</td></tr>
+      <tr><td>Hosting</td><td>GCP e2-small, us-central1-a</td><td>~$12/month, project finance-assistant-476706</td></tr>
+      <tr><td>Scheduler</td><td>Prefect v3+ (self-hosted)</td><td>Retries, observability, failure alerts</td></tr>
+      <tr><td>Timezone</td><td><code>zoneinfo</code> / America/Los_Angeles</td><td>All times in PST/PDT — never hardcode UTC offsets</td></tr>
+      <tr><td>ORM</td><td>SQLAlchemy 2.0+</td><td>SQLite dialect</td></tr>
+      <tr><td>LangGraph state</td><td><code>AsyncSqliteSaver</code></td><td>Checkpointing for multi-turn conversations</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── AGENTS ── -->
+  <h2 id="agents">Multi-Agent Design</h2>
+  <p>Meta-orchestrator pattern: <code>OrchestratorAgent</code> receives all real-time inputs, classifies them, and routes to the right specialist. Prefect flows call agents directly — the Orchestrator is not involved in scheduled jobs.</p>
+
+  <h3>Agent Roster</h3>
+
+  <div class="agent-card">
+    <div class="agent-name">🎯 OrchestratorAgent <span class="badge badge-gray">Haiku 4.5</span> <span class="badge badge-gray">max_tokens 512</span> <span class="badge badge-gray">recursion 3</span></div>
+    <div class="agent-trigger">Every real-time Telegram message</div>
+    <p style="font-size:13px;color:#4b5563;margin:0 0 6px">Classifies input type and routes to the correct specialist. Also answers general questions directly.</p>
+    <div class="tools"><span>get_health_profile</span><span>get_user_profile</span><span>get_nutrition_guidance</span><span>query_knowledge_base</span><span>get_semantic_memory</span><span>send_telegram_msg</span></div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">🍽 MealAnalyzerAgent <span class="badge badge-blue">Sonnet 4.6</span> <span class="badge badge-gray">max_tokens 1024</span> <span class="badge badge-gray">recursion 5</span></div>
+    <div class="agent-trigger">Photo(s) received</div>
+    <div class="tools"><span>ask_web_search_permission</span><span>save_meal_analysis</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px;">injected: health_profile · user_profile · nutrition_guidance · semantic_memory · knowledge_base</div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">🏥 HealthExtractorAgent <span class="badge badge-blue">Sonnet 4.6</span> <span class="badge badge-gray">max_tokens 768</span> <span class="badge badge-gray">recursion 5</span></div>
+    <div class="agent-trigger">Lab report PDF</div>
+    <div class="tools"><span>confirm_with_user</span><span>save_health_profile</span><span>generate_nutrition_guidance</span></div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">📚 KnowledgeIngestorAgent <span class="badge badge-blue">Sonnet 4.6</span> <span class="badge badge-gray">max_tokens 1536</span> <span class="badge badge-gray">recursion 3</span></div>
+    <div class="agent-trigger">Research article PDF</div>
+    <div class="tools"><span>save_to_knowledge_base</span></div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">📈 PatternDetectorAgent <span class="badge badge-gray">Haiku 4.5</span> <span class="badge badge-gray">max_tokens 512</span> <span class="badge badge-gray">recursion 3</span></div>
+    <div class="agent-trigger">After daily summary · Sunday weekly report</div>
+    <div class="tools"><span>query_last_7_days</span><span>get_sent_callouts</span><span>send_telegram_msg</span></div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">📋 DailySummaryAgent <span class="badge badge-gray">Haiku 4.5</span> <span class="badge badge-gray">max_tokens 1536</span> <span class="badge badge-gray">recursion 3</span></div>
+    <div class="agent-trigger">11:30pm via Prefect</div>
+    <div class="tools"><span>query_todays_meals</span><span>send_telegram_msg</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px;">injected: health_profile · user_profile · nutrition_guidance</div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">📊 WeeklyReportAgent <span class="badge badge-green">Opus 4.8</span> <span class="badge badge-gray">max_tokens 3072</span> <span class="badge badge-gray">recursion 8</span></div>
+    <div class="agent-trigger">Sunday 8pm via Prefect</div>
+    <div class="tools"><span>query_week_meals</span><span>get_last_week_recommendations</span><span>send_telegram_msg</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px;">injected: health_profile · user_profile · nutrition_guidance · semantic_memory · knowledge_base</div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-name">💡 HealthInsightsAgent <span class="badge badge-green">Opus 4.8</span> <span class="badge badge-gray">max_tokens 1536</span> <span class="badge badge-gray">recursion 10</span></div>
+    <div class="agent-trigger">"Why am I feeling X?" questions</div>
+    <div class="tools"><span>query_last_2_days_meals</span><span>query_last_2_days_steps</span><span>query_last_2_days_sleep</span><span>ask_web_search_permission</span><span>send_telegram_msg</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:4px;">injected: health_profile · user_profile · nutrition_guidance · semantic_memory · knowledge_base</div>
+  </div>
+
+  <h3>Agent Extensibility — YAML Config Pattern</h3>
+  <p>Every agent is fully described by a YAML config file. <strong>Adding a new agent = drop a YAML file in <code>bot/agents/configs/</code>. No other code changes needed.</strong></p>
+
+  <pre><code># bot/agents/configs/meal_analyzer.yaml
+name: MealAnalyzerAgent
+model: claude-sonnet-4-6
+max_tokens: 1024
+recursion_limit: 5
+prompt: prompts/meal_analyzer.txt
+tools:
+  - ask_web_search_permission
+  - get_health_profile
+  - get_semantic_memory
+  - save_meal_analysis
+context:
+  - health_profile
+  - semantic_memory
+  - knowledge_base
+triggers:
+  - photo</code></pre>
+
+  <table>
+    <thead><tr><th>Component</th><th>File</th><th>Role</th></tr></thead>
+    <tbody>
+      <tr><td><code>BaseAgent</code></td><td>base_agent.py</td><td>Shared LangGraph wiring — all agents inherit</td></tr>
+      <tr><td><code>AgentLoader</code></td><td>agent_loader.py</td><td>Scans configs/ at startup, builds AGENT_REGISTRY</td></tr>
+      <tr><td><code>TOOL_REGISTRY</code></td><td>tool_registry.py</td><td>All tools registered by name — agents reference in YAML</td></tr>
+      <tr><td>Agent configs</td><td>configs/*.yaml</td><td>One file per agent — model, prompt, tools, context, triggers</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>To add a new agent in the future:</strong> create a YAML config + a Python file for business logic + register any new tools in TOOL_REGISTRY. App picks it up on next restart.</p>
+
+  <h3>Context Injection vs Tool-call</h3>
+  <p>Two ways an agent accesses shared data — the right choice depends on whether the context is <strong>always consumed</strong> or only sometimes needed:</p>
+  <table>
+    <thead><tr><th>Pattern</th><th>How</th><th>When to use</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Injection</strong> (<code>context:</code> in YAML)</td><td>Loaded from DB once, prepended to system prompt before agent runs</td><td>Context is <strong>always</strong> consumed — cheaper than a tool-call round-trip</td></tr>
+      <tr><td><strong>Tool-call</strong> (<code>tools:</code> in YAML)</td><td>Agent calls the tool mid-run, on demand</td><td>Context is <strong>conditionally</strong> needed — avoid paying tokens when routing or task doesn't require it</td></tr>
+    </tbody>
+  </table>
+  <table style="margin-top:12px">
+    <thead><tr><th>Agent</th><th>Pattern</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>MealAnalyzerAgent</td><td><strong>Inject</strong></td><td>Every meal evaluated against targets — context always consumed</td></tr>
+      <tr><td>DailySummaryAgent</td><td><strong>Inject</strong></td><td>Always flags meals against targets — no conditional logic needed</td></tr>
+      <tr><td>WeeklyReportAgent</td><td><strong>Inject</strong></td><td>Full-picture analysis — always needs everything</td></tr>
+      <tr><td>HealthInsightsAgent</td><td><strong>Inject</strong></td><td>Personalised Q&amp;A without profile produces generic answers</td></tr>
+      <tr><td>OrchestratorAgent</td><td><strong>Tool-call</strong></td><td>Routes most messages without context; only fetches when answering directly</td></tr>
+      <tr><td>HealthExtractorAgent</td><td><strong>None</strong></td><td>Pure document extraction — profile doesn't help Claude read a blood test</td></tr>
+      <tr><td>KnowledgeIngestorAgent</td><td><strong>None</strong></td><td>Pure ingestion — profile doesn't change how a research paper is summarised</td></tr>
+      <tr><td>PatternDetectorAgent</td><td><strong>None</strong></td><td>Streak thresholds are hardcoded, not personalised to lab values</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What Agents See — Unified Context</h3>
+  <p>The 4 injection agents receive these blocks prepended to their system prompt:</p>
+  <pre><code>=== USER PROFILE ===
+Name: Sahil, Age: 33, Gender: Male
+Height: 178cm, Weight: 81kg, BMI: 25.6
+Diet: omnivore
+Allergies: none  |  Intolerances: none
+Avoided foods: none  |  Preferred cuisines: indian, mediterranean
+Activity level: moderate
+Goals: 10,000 steps/day, 7hrs sleep
+Macro targets: 1,800 kcal · 140g protein · 180g carbs · 60g fat · 30g fiber
+
+=== LATEST LAB RESULTS (2026-05-15) ===
+A1C: 6.4%  (target: &lt;5.7%)
+LDL: 142 mg/dL  (target: &lt;100)
+HDL: 48 mg/dL  (target: &gt;60)
+Triglycerides: 180 mg/dL
+Medications: metformin 500mg
+
+=== PERSONALISED NUTRITION RULES ===
+[a1c]  Limit refined carbs to 45g/meal — A1C 6.4% is pre-diabetic range
+[a1c]  Prioritise high-fiber foods (&gt;8g/meal) — fiber slows glucose absorption
+[ldl]  Saturated fat cap: 15g/day — LDL 142 is 42% above target
+[ldl]  Favour unsaturated fats: avocado, nuts, olive oil over ghee/butter
+[hdl]  Include omega-3 sources 3×/week — salmon, flax, walnuts raise HDL
+[gen]  Avoid sugary beverages — direct A1C impact
+
+=== SEMANTIC MEMORY (as of 2026-06-01) ===
+• Breakfast is skipped ~3x/week, most often Monday and Tuesday
+• High-GI meals cluster on weekday evenings (likely eating out)
+• Steps average 8,200 on weekends vs 3,100 on weekdays</code></pre>
+  <p><strong>Null handling:</strong> If any section is missing (no lab report yet, no profile set, no semantic memory), a one-line fallback is injected and the agent proceeds. No agent crashes on missing context.</p>
+
+  <h3 id="routing">Routing Logic</h3>
+  <table>
+    <thead><tr><th>Input type</th><th>Route</th></tr></thead>
+    <tbody>
+      <tr><td>Photo(s)</td><td>MealAnalyzerAgent → PatternDetectorAgent (after save)</td></tr>
+      <tr><td>PDF — lab report</td><td>HealthExtractorAgent</td></tr>
+      <tr><td>PDF — research article</td><td>KnowledgeIngestorAgent</td></tr>
+      <tr><td>Health symptom question</td><td>HealthInsightsAgent (multi-turn)</td></tr>
+      <tr><td>General question</td><td>OrchestratorAgent answers directly</td></tr>
+      <tr><td>Text command</td><td>Rule-based handler (no agent)</td></tr>
+      <tr><td>Scheduled (Prefect)</td><td>Direct to agent — bypasses Orchestrator</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Web search policy:</strong> Never fires automatically. Any agent must first send a permission request via Telegram and wait for explicit confirmation before calling <code>web_search</code>.</p>
+  <p><strong>Pause-and-wait — LangGraph <code>interrupt()</code>:</strong> Both <code>ask_web_search_permission</code> and <code>confirm_with_user</code> use LangGraph's built-in interrupt/resume. <code>AsyncSqliteSaver</code> holds graph state during the pause. When the user replies, the bot handler calls <code>graph.invoke(Command(resume=user_message), config={"thread_id": chat_id})</code> to resume. No custom state machine needed.</p>
+  <pre><code>def ask_web_search_permission(reason: str) -> str:
+    answer = interrupt(f"I'd like to search the web for {reason}. Can I?")
+    return answer  # resumes here when user replies
+
+def confirm_with_user(message: str) -> str:
+    answer = interrupt(message)
+    return answer</code></pre>
+
+  <!-- ── FEATURES ── -->
+  <h2 id="features">Feature Specs</h2>
+
+  <div class="feature-grid">
+    <div class="feature-card"><div class="num">Feature 1</div><h4>📷 Meal Photo Logging</h4><p>Multi-photo album support, always explicit meal type, non-food detection, beverages included</p></div>
+    <div class="feature-card"><div class="num">Feature 2</div><h4>🏥 Health Profile Upload</h4><p>PDF → extract → confirm → save. One row per lab visit (history accumulates). Guidance regenerated on each upload.</p></div>
+    <div class="feature-card"><div class="num">Feature 3</div><h4>☀️ Morning Briefing</h4><p>10:30am daily — steps, sleep, weather, quote. Nudges if steps &lt;5K or sleep &lt;7hrs</p></div>
+    <div class="feature-card"><div class="num">Feature 4</div><h4>🍽 Missed Meal Alerts</h4><p>3pm (breakfast/lunch), 10:30pm (dinner) — skipped if already logged</p></div>
+    <div class="feature-card"><div class="num">Feature 5</div><h4>📋 Daily Meal Summary</h4><p>11:30pm — all meals, total macros, A1C/cholesterol flags, score 0–100, one tip</p></div>
+    <div class="feature-card"><div class="num">Feature 6</div><h4>📈 Pattern Detection</h4><p>5 pattern types, ≥3 day streak threshold, escalating callouts 8–11am next morning</p></div>
+    <div class="feature-card"><div class="num">Feature 7</div><h4>💬 General Conversation</h4><p>Health Q&amp;A personalised to actual LDL/A1C values. Warm redirect for off-scope questions</p></div>
+    <div class="feature-card"><div class="num">Feature 8</div><h4>💡 Health Insights Q&amp;A</h4><p>Symptom questions → follow-up → 2-day data lookup → personalised explanation</p></div>
+    <div class="feature-card"><div class="num">Feature 9</div><h4>📊 Weekly Report</h4><p>Sunday 8pm — score delta, correlations, recommendation follow-through, honest verdict, 3 ranked changes</p></div>
+    <div class="feature-card"><div class="num">Feature 10</div><h4>🧠 Episodic → Semantic Memory</h4><p>Sunday 6pm — 90-day window → extracted behavioural facts → user_semantic_memory (weekly refresh)</p></div>
+    <div class="feature-card"><div class="num">Feature 11</div><h4>👋 User Onboarding</h4><p>First-run conversational setup — diet type, allergies, activity level, calorie target → user_profile</p></div>
+  </div>
+
+  <h3 id="f1">Feature 1 — Meal Photo Logging</h3>
+  <ul>
+    <li>Telegram album photos arrive separately with a shared <code>media_group_id</code></li>
+    <li>First photo schedules <code>call_later(2, process_group, id)</code> — fires after 2s, reads all buffered photos as one meal</li>
+    <li>Single meal-type keyboard shown: <strong>[Breakfast] [Lunch] [Dinner] [Snack]</strong> — never inferred</li>
+    <li>Non-food detected → "That doesn't look like food — did you mean to send this?" with [Yes, analyze anyway] [Discard]</li>
+    <li>Beverages included — sugar/alcohol flagged for A1C relevance</li>
+    <li>No image storage — analyzed on receipt, discarded immediately</li>
+  </ul>
+  <p><strong>Analysis stored in SQLite (not sent to user):</strong></p>
+  <pre><code>{
+  "foods_identified": ["white rice", "chicken curry", "chai"],
+  "estimated_macros": { "calories": 780, "protein_g": 38, "carbs_g": 95,
+                        "fat_g": 22, "fiber_g": 3, "saturated_fat_g": 8, "sugar_g": 12 },
+  "glycemic_load": "high",
+  "cholesterol_flags": ["saturated fat above target"],
+  "a1c_flags": ["high glycemic load", "sugary beverage"],
+  "score": 48
+}</code></pre>
+
+  <h3 id="f2">Feature 2 — Health Profile Upload</h3>
+  <ol>
+    <li>User sends a lab report PDF</li>
+    <li><code>HealthExtractorAgent</code> extracts: A1C, LDL, HDL, triglycerides, medications, targets, BMI</li>
+    <li>Bot confirms: <em>"I found: A1C: 6.2%, LDL: 142 mg/dL, HDL: 48 mg/dL. Does this look right? [Confirm] [Re-upload]"</em></li>
+    <li>On confirm: <code>INSERT INTO user_health_profile (report_date, a1c, ...)</code> — one row per lab visit, history preserved</li>
+    <li>On confirm: <code>user_nutrition_guidance</code> fully replaced with rules derived from the new lab values</li>
+  </ol>
+  <p><strong>Null state (day 1 before any PDF):</strong> agents inject fallback context: <em>"No lab report uploaded yet — recommendations are general."</em> One-time prompt fires on first non-photo, non-PDF message; tracked via diskcache key <code>onboarding_prompt_sent</code>.</p>
+
+  <h3 id="f3">Feature 3 — Morning Briefing (10:30am PST)</h3>
+  <p>Simple Prefect flow — one Claude call, no LangGraph agent.</p>
+  <ul>
+    <li>Steps yesterday (Fitbit <code>/activities/date/{yesterday}</code>)</li>
+    <li>Sleep last night (Fitbit <code>/sleep/date/{today}</code>)</li>
+    <li>Weather: Open-Meteo, lat 37.3861, lon -122.0839 — rain window included only if rain expected</li>
+    <li>Quote (alternates by day): <strong>even days</strong> → Bhagavad Gita verse + brief context; <strong>odd days</strong> → tech/business leader quote</li>
+    <li><strong>Steps nudge</strong> if previous day &lt; 5,000 steps</li>
+    <li><strong>Sleep nudge</strong> if last night &lt; 7 hours</li>
+  </ul>
+
+  <h3 id="f4">Feature 4 — Missed Meal Alerts</h3>
+  <table>
+    <thead><tr><th>Time</th><th>Check</th><th>Message</th></tr></thead>
+    <tbody>
+      <tr><td>3:00pm PST</td><td>Breakfast OR lunch not logged</td><td>"Hey! You haven't logged breakfast or lunch yet 🍽"</td></tr>
+      <tr><td>10:30pm PST</td><td>Dinner not logged</td><td>"Dinner time — snap a photo before you sleep! 🍽"</td></tr>
+    </tbody>
+  </table>
+
+  <h3 id="f5">Feature 5 — Daily Meal Summary (11:30pm PST)</h3>
+  <ul>
+    <li>All meals logged today with foods identified</li>
+    <li>Total daily macros (calories, protein, carbs, fat, fiber, saturated fat, sugar)</li>
+    <li>A1C risk foods + alternatives &nbsp;·&nbsp; Cholesterol risk items flagged</li>
+    <li>Daily dietary score (0–100)</li>
+    <li>One concrete improvement for tomorrow</li>
+    <li>Steps and sleep <strong>not</strong> included</li>
+  </ul>
+
+  <h3 id="f6">Feature 6 — Pattern Detection</h3>
+  <p>Runs inside <code>daily_summary_flow</code> after each summary. Sunday <code>weekly_report_flow</code> also triggers it for 7-day patterns.</p>
+  <table>
+    <thead><tr><th>Pattern</th><th>Threshold</th></tr></thead>
+    <tbody>
+      <tr><td>High glycemic load</td><td>≥3 consecutive days → escalating callout</td></tr>
+      <tr><td>Saturated fat above target</td><td>≥3 consecutive days → escalating callout</td></tr>
+      <tr><td>Skipped meals</td><td>≥3 consecutive days → escalating callout</td></tr>
+      <tr><td>Steps below 5,000</td><td>≥3 consecutive days → escalating callout</td></tr>
+      <tr><td>Sleep under 6hrs</td><td>≥3 consecutive days → escalating callout</td></tr>
+    </tbody>
+  </table>
+  <p>Dedup: diskcache key <code>callout:{date}:{pattern_type}</code> 24hr TTL. Delivery: random offset 8–11am next morning.</p>
+  <p><strong>Escalation — three tiers:</strong></p>
+  <table>
+    <thead><tr><th>Streak</th><th>Tone</th><th>What changes</th></tr></thead>
+    <tbody>
+      <tr><td>Day 3</td><td>Informational</td><td>Flags the pattern, states the health connection calmly</td></tr>
+      <tr><td>Days 4–6</td><td>Firm</td><td>Stronger language, explicit impact on A1C/cholesterol goal</td></tr>
+      <tr><td>Day 7+</td><td>Strong health warning</td><td>Direct, urgent — clear note to take care of your health</td></tr>
+    </tbody>
+  </table>
+  <pre><code>Day 3:  "You've had high glycemic load meals 3 days in a row 🍚 — this is
+         starting to work against your A1C target."
+
+Day 5:  "5 consecutive days of high glycemic load ⚠️ — this is directly
+         stalling your A1C recovery. Make a change today."
+
+Day 7+: "7 days of high glycemic load in a row 🚨 — this is a serious
+         pattern putting real stress on your blood sugar. Please take
+         care of your health. One better meal today is how streaks end."</code></pre>
+
+  <h3 id="f7">Feature 7 — General Conversation</h3>
+  <p>Handles all text not classified as a health symptom, command, or known trigger. Answers personalised to actual health values. Out-of-scope questions get a warm redirect.</p>
+  <p><strong>Classification rule:</strong> Personal symptoms ("why am I tired?") → <code>HealthInsightsAgent</code>. General questions ("is oat milk good for cholesterol?") → answered directly by <code>OrchestratorAgent</code> using health profile and knowledge base context.</p>
+
+  <h3 id="f8">Feature 8 — Health Insights Q&amp;A</h3>
+  <p>Triggered by natural language symptom questions. Lookback: always 2 days.</p>
+  <ol>
+    <li>Queries last 2 days of meal logs, steps, sleep from SQLite</li>
+    <li>Asks one focused follow-up question</li>
+    <li>Incorporates user answer + data → personalised explanation</li>
+    <li>Asks web search permission before validating correlations</li>
+    <li>Delivers evidence-based answer citing specific meals/metrics</li>
+  </ol>
+  <p>Conversation state stored in LangGraph SQLite checkpoint (<code>AsyncSqliteSaver</code>).</p>
+
+  <h3 id="f9">Feature 9 — Weekly Report (Sunday 8pm PST)</h3>
+  <ul>
+    <li>Week-over-week dietary score delta</li>
+    <li>Worst patterns of the week &nbsp;·&nbsp; Avg daily steps + trend &nbsp;·&nbsp; Avg sleep + trend</li>
+    <li><strong>Recommendation follow-through:</strong> last week's stored recommendations vs this week's meals → followed / partially / not followed</li>
+    <li>Correlations (e.g. worst dietary days ↔ lowest step counts)</li>
+    <li><strong>Honest verdict:</strong> one warm direct sentence about week's trajectory toward A1C/cholesterol goals</li>
+    <li>3 specific ranked changes for next week</li>
+  </ul>
+  <p>Week 1 exception: skip follow-through section. User can send <code>"skip comparison"</code> before Sunday to flag omission.</p>
+
+  <h3 id="f10">Feature 10 — Episodic → Semantic Memory Extraction (Sunday 6pm PST)</h3>
+  <p>Runs via <code>semantic_extraction_flow</code> at 6pm Sunday — 2 hours before the weekly report — so <code>WeeklyReportAgent</code> benefits from freshly extracted semantic facts.</p>
+  <ul>
+    <li>Queries last 90 days of <code>meal_logs</code>, <code>daily_health_logs</code>, and <code>patterns</code></li>
+    <li>Claude extracts behavioural facts grouped by category: <code>meal_pattern</code>, <code>sleep_pattern</code>, <code>activity_pattern</code>, <code>behavioral</code></li>
+    <li>Full replacement: old facts replaced with updated ones in <code>user_semantic_memory</code></li>
+    <li>Meaningful after ~4 weeks of data; before that, agents fall back to raw recent data only</li>
+  </ul>
+  <p><strong>Agents that use semantic memory:</strong> WeeklyReportAgent, HealthInsightsAgent, OrchestratorAgent, MealAnalyzerAgent</p>
+
+  <h3 id="f11">Feature 11 — User Onboarding</h3>
+  <p>Triggered on first message when <code>user_profile</code> row doesn't exist (checked via diskcache key <code>onboarding_complete</code>). Bot sends a short conversational setup before processing any other request:</p>
+  <pre><code>Bot: Hey Sahil! 👋 Let me personalise your experience with a few quick questions.
+
+     What's your diet type?
+     [🥩 Omnivore]  [🥦 Vegetarian]  [🌱 Vegan]
+
+Bot: Any food allergies or things you strictly avoid?
+     (Type them comma-separated, or tap 'None')  [None]
+
+Bot: What's your typical activity level?
+     [🪑 Sedentary]  [🚶 Moderate]  [🏃 Active]
+
+Bot: Last one — what's your daily calorie target?
+     [1,600 kcal]  [1,800 kcal]  [2,000 kcal]  [Skip for now]</code></pre>
+  <p><strong>What gets populated:</strong> <code>diet_type</code>, <code>allergies</code>, <code>avoided_foods</code>, <code>activity_level</code>, <code>calorie_target</code>. Other fields (<code>height_cm</code>, <code>weight_kg</code>, macro breakdowns) default to NULL and are refined via <code>/profile update</code>.</p>
+  <p><strong>Skip / resume:</strong> If user sends a non-answer mid-onboarding (e.g. sends a photo), save partial answers and resume after that interaction completes.</p>
+
+  <!-- ── KNOWLEDGE BASE ── -->
+  <h2 id="knowledge">Knowledge Base</h2>
+
+  <p>Two sources ground agent recommendations in facts rather than LLM guesses:</p>
+
+  <h3>Indian Food Nutrition Table</h3>
+  <p>Structured SQL lookup. <code>MealAnalyzerAgent</code> queries by food name for accurate macros on Indian dishes Claude has limited training data for. Populated from IFCT / NIN India before deployment.</p>
+
+  <h3>Research Articles — Structured Extraction</h3>
+  <p>Peer-reviewed PDFs on A1C, LDL, HDL, dietary interventions. At ingest: <code>KnowledgeIngestorAgent</code> uses Claude to extract 10–20 key findings and relevance tags, writing one JSON file to <code>knowledge_base/</code>. At query time: all files are loaded (~10–20 docs, ~6,000 tokens) and injected directly into the agent's context — no retrieval step, full coverage guaranteed.</p>
+
+  <pre><code>knowledge_base/
+  harvard-dietary-fiber-a1c-2023.json
+  ldl-mediterranean-diet-2024.json
+  indian-glycemic-index-guide-2022.json
+
+Each file:
+{
+  "source": "Effect of dietary fiber on A1C - Harvard 2023",
+  "ingested_at": "2026-05-30",
+  "relevance_tags": ["a1c", "fiber", "glycemic_index"],
+  "findings": [
+    "Dietary fiber >25g/day reduces A1C by 0.5–1.2% over 12 weeks",
+    "Soluble fiber has stronger effect than insoluble fiber",
+    "Each 5g/day fiber increase → ~0.1% A1C reduction"
+  ]
+}</code></pre>
+
+  <h3>Reasoning example</h3>
+  <pre><code>User's A1C: 6.4%                      (health profile)
+High-GI meals: 4 of last 7 days       (meal_logs)
+Research: "Reducing refined carbs     (knowledge_base JSON)
+           lowers A1C by 0.5% in 3 months"
+──────────────────────────────────────────────────
+Output: "Cutting white rice 3x/week could move
+         your A1C from 6.4% → 5.9% in 3 months."</code></pre>
+
+  <!-- ── SCHEMA ── -->
+  <h2 id="schema">SQLite Schema</h2>
+  <p><code>PRAGMA journal_mode=WAL</code> enabled at connection time — allows concurrent reads from bot + Prefect processes while serialising writes.</p>
+
+  <table class="schema-table">
+    <thead><tr><th>Table</th><th>Primary key</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>daily_health_logs</td><td>date (TEXT)</td><td>Fitbit steps + sleep, persisted by morning_report_flow</td></tr>
+      <tr><td>meal_logs</td><td>id AUTOINCREMENT</td><td>One row per meal log. foods_identified, macros, flags, score as JSON TEXT</td></tr>
+      <tr><td>user_profile</td><td>id=1 (enforced)</td><td>Single-row static profile — diet type, allergies, macro targets, activity level. Set during onboarding, updated via <code>/profile update</code></td></tr>
+      <tr><td>user_health_profile</td><td>id AUTOINCREMENT, report_date UNIQUE</td><td>One row per lab report upload — accumulates over time. Agents query most recent row (<code>ORDER BY report_date DESC LIMIT 1</code>). History used for A1C/LDL trend analysis.</td></tr>
+      <tr><td>user_nutrition_guidance</td><td>id AUTOINCREMENT</td><td>Personalised rules derived from latest lab values + knowledge base. Fully replaced on each lab report confirm.</td></tr>
+      <tr><td>daily_summaries</td><td>date (TEXT)</td><td>Generated summary + dietary score per day</td></tr>
+      <tr><td>weekly_reports</td><td>week_start (TEXT)</td><td>Weekly report data + skip_comparison flag</td></tr>
+      <tr><td>patterns</td><td>id AUTOINCREMENT</td><td>Pattern streak tracking for escalation logic</td></tr>
+      <tr><td>indian_foods</td><td>id AUTOINCREMENT</td><td>Macro + GI data for Indian dishes</td></tr>
+      <tr><td>user_semantic_memory</td><td>id AUTOINCREMENT</td><td>Extracted behavioural facts (meal/sleep/activity/behavioral), refreshed weekly from 90-day window</td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Indexes:</strong> <code>CREATE INDEX idx_meal_logs_date ON meal_logs(date)</code> &nbsp;·&nbsp; <code>CREATE INDEX idx_patterns_date_type ON patterns(date, pattern_type)</code></p>
+
+  <!-- ── CACHING ── -->
+  <h2 id="caching">Caching Strategy</h2>
+  <p>No Redis. Three layers:</p>
+  <table>
+    <thead><tr><th>Layer</th><th>Key/Cache</th><th>TTL</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>cachetools TTLCache</td><td>media_buffer</td><td>2s</td><td>Buffer Telegram album photos before processing</td></tr>
+      <tr><td>cachetools TTLCache</td><td>health_profile</td><td>1hr</td><td>Avoid repeated SQLite reads across agent calls</td></tr>
+      <tr><td>diskcache</td><td>callout:{date}:{type}</td><td>24hr</td><td>Prevent duplicate pattern callouts same day</td></tr>
+      <tr><td>diskcache</td><td>fitbit_token</td><td>None</td><td>Latest Fitbit refresh token (rotates on each call)</td></tr>
+      <tr><td>diskcache</td><td>onboarding_complete</td><td>None</td><td>Set after first-run onboarding flow completes</td></tr>
+      <tr><td>diskcache</td><td>onboarding_prompt_sent</td><td>None</td><td>One-time "upload your lab report" nudge tracking</td></tr>
+      <tr><td>SQLite (LangGraph)</td><td>AsyncSqliteSaver</td><td>Persistent</td><td>HealthInsightsAgent multi-turn conversation state</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── FLOWS ── -->
+  <h2 id="flows">Prefect Flows Schedule</h2>
+  <p>All flows: <code>CronSchedule</code> with <code>timezone="America/Los_Angeles"</code>. Each has 3 retries (60s delay) + Telegram failure notification.</p>
+
+  <div class="flow-row"><div class="flow-time">10:30am daily</div><div class="flow-desc"><code>morning_report_flow</code> — Fitbit + Open-Meteo + one Claude call (<strong>Haiku 4.5</strong>, <code>prompts/morning_report.txt</code>). No LangGraph agent. Steps/sleep nudges if below threshold.</div></div>
+  <div class="flow-row"><div class="flow-time">3:00pm daily</div><div class="flow-desc"><code>lunch_alert_flow</code> — SQL check → Telegram if no breakfast/lunch logged.</div></div>
+  <div class="flow-row"><div class="flow-time">10:30pm daily</div><div class="flow-desc"><code>dinner_alert_flow</code> — SQL check → Telegram if no dinner logged.</div></div>
+  <div class="flow-row"><div class="flow-time">11:30pm daily</div><div class="flow-desc"><code>daily_summary_flow</code> — DailySummaryAgent → PatternDetectorAgent.</div></div>
+  <div class="flow-row"><div class="flow-time">6:00pm Sunday</div><div class="flow-desc"><code>semantic_extraction_flow</code> — analyzes 90 days of meal/sleep/activity data, extracts behavioural facts into <code>user_semantic_memory</code>. Runs before weekly report so agents have fresh semantic context.</div></div>
+  <div class="flow-row"><div class="flow-time">8:00pm Sunday</div><div class="flow-desc"><code>weekly_report_flow</code> — WeeklyReportAgent → PatternDetectorAgent (7-day patterns).</div></div>
+
+  <p style="margin-top:16px"><strong>Backups:</strong> GCP disk snapshots via GCP console (daily, retain 30 days). No code required. ~$0.05/GB/month.</p>
+
+  <!-- ── TONE ── -->
+  <h2 id="tone">Message Tone &amp; Style</h2>
+  <ul>
+    <li>Include relevant emojis throughout — never feel dry or robotic</li>
+    <li>Warm, conversational — like a knowledgeable friend, not a clinical report</li>
+    <li>Concise but human — avoid bullet-point walls of text</li>
+    <li>Vary phrasing across days so messages don't feel repetitive</li>
+  </ul>
+
+  <div class="tone-good"><div class="tone-label">✅ Good</div>"Great job logging all three meals today! 🎉 Your dietary score is 72/100 — solid, but that naan at lunch was doing your A1C no favours 😅. Tomorrow: try swapping it for a small roti."</div>
+  <div class="tone-bad"><div class="tone-label">❌ Bad</div>"Daily Score: 72. Flags: refined carbs. Recommendation: reduce naan."</div>
+
+  <!-- ── COMMANDS ── -->
+  <h2 id="commands">Bot Commands</h2>
+  <table>
+    <thead><tr><th>Command / Message</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>Send photo(s)</td><td>Trigger meal logging flow</td></tr>
+      <tr><td>Send PDF</td><td>Lab report → HealthExtractorAgent · Research article → KnowledgeIngestorAgent</td></tr>
+      <tr><td><code>"skip comparison"</code></td><td>Flag to skip recommendation follow-through in next Sunday report</td></tr>
+      <tr><td><code>/profile</code></td><td>Display current health profile values (latest lab results + user profile)</td></tr>
+      <tr><td><code>/profile update</code></td><td>Conversationally update one or more user_profile fields</td></tr>
+      <tr><td><code>/addfood &lt;name&gt;</code></td><td>Add or update an entry in the indian_foods nutrition table</td></tr>
+      <tr><td><code>/help</code></td><td>List available commands</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── PROJECT STRUCTURE ── -->
+  <h2 id="structure">Project Structure</h2>
+  <pre><code>nutrition-bot/
+├── bot/
+│   ├── main.py                   # Entry point, registers all handlers
+│   ├── handlers/
+│   │   ├── meal.py               # Photo handler + cachetools buffering
+│   │   ├── health.py             # PDF handler → HealthExtractor or KnowledgeIngestor
+│   │   └── commands.py           # /profile, /help, skip comparison
+│   └── agents/
+│       ├── base_agent.py         # Shared LangGraph wiring all agents inherit
+│       ├── agent_loader.py       # YAML configs → AGENT_REGISTRY at startup
+│       ├── tool_registry.py      # All tools registered by name
+│       ├── configs/              # YAML per agent — add new agent = new file here
+│       │   ├── meal_analyzer.yaml
+│       │   ├── health_insights.yaml
+│       │   └── ...
+│       ├── orchestrator.py       # Router + general Q&A
+│       ├── meal_analyzer.py
+│       ├── health_extractor.py
+│       ├── knowledge_ingestor.py # PDF → extract findings → save JSON file
+│       ├── pattern_detector.py
+│       ├── daily_summary.py
+│       ├── weekly_report.py
+│       └── health_insights.py
+├── flows/
+│   ├── morning_report.py         # 10:30am
+│   ├── alerts.py                 # 3pm + 10:30pm
+│   ├── daily_summary.py          # 11:30pm
+│   ├── semantic_extraction.py    # Sunday 6pm — episodic → semantic memory
+│   └── weekly_report.py          # Sunday 8pm
+├── knowledge_base/               # One JSON file per ingested research article
+├── db/
+│   ├── models.py                 # SQLAlchemy models (7 tables)
+│   ├── queries.py                # All shared query functions
+│   └── migrations/001_initial_schema.sql
+├── prompts/                      # System prompt files per agent
+├── tests/
+│   ├── unit/                     # SQLite :memory: + cachetools tests
+│   ├── integration/              # Per-agent integration tests
+│   └── e2e/                      # Full user journey tests
+├── .claude/
+│   ├── CLAUDE.md                 # Project context for Claude
+│   └── memory/decisions/001-tech-stack.md
+├── config.py
+├── requirements.txt
+└── requirements-dev.txt          # pytest, pytest-asyncio, freezegun, respx</code></pre>
+
+  <!-- ── PHASES ── -->
+  <h2 id="phases">7-Phase Implementation Plan</h2>
+  <p>Test-Driven Development throughout. No implementation code written without a failing test first.</p>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">1</div><div><div class="phase-title">Infrastructure &amp; Project Setup</div><div class="phase-subtitle">No tests — working environment before any code</div></div></div>
+    <p style="font-size:12px;color:#6b7280;margin:0 0 10px">Run steps 1–4 from your local machine. Steps 5–7 run inside the VM.</p>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 1 — Create the VM</p>
+    <pre><code>gcloud compute instances create nutrition-bot \
+  --project=finance-assistant-476706 \
+  --zone=us-central1-a \
+  --machine-type=e2-small \
+  --image-family=ubuntu-2204-lts \
+  --image-project=ubuntu-os-cloud \
+  --boot-disk-size=20GB \
+  --boot-disk-type=pd-ssd \
+  --tags=nutrition-bot</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 2 — Firewall rule (IAP SSH)</p>
+    <pre><code>gcloud compute firewall-rules create allow-iap-ssh-nutrition-bot \
+  --project=finance-assistant-476706 \
+  --allow=tcp:22 \
+  --source-ranges=35.235.240.0/20 \
+  --target-tags=nutrition-bot</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 3 — Daily disk snapshot schedule</p>
+    <pre><code>gcloud compute resource-policies create snapshot-schedule nutrition-bot-daily-backup \
+  --project=finance-assistant-476706 \
+  --region=us-central1 \
+  --max-retention-days=30 \
+  --on-source-disk-delete=keep-auto-snapshots \
+  --daily-schedule \
+  --start-time=02:00
+
+gcloud compute disks add-resource-policies nutrition-bot \
+  --project=finance-assistant-476706 \
+  --zone=us-central1-a \
+  --resource-policies=nutrition-bot-daily-backup</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 4 — SSH into the VM</p>
+    <pre><code>gcloud compute ssh nutrition-bot \
+  --project=finance-assistant-476706 \
+  --zone=us-central1-a \
+  --tunnel-through-iap</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 5 — Bootstrap the VM (inside VM)</p>
+    <pre><code>sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y python3.11 python3.11-venv python3.11-dev python3-pip git sqlite3
+
+sudo mkdir -p /opt/nutrition-bot && sudo chown $USER:$USER /opt/nutrition-bot
+mkdir -p /opt/nutrition-bot/{knowledge_base,.cache,logs}
+
+python3.11 -m venv /opt/nutrition-bot/venv
+echo "source /opt/nutrition-bot/venv/bin/activate" >> ~/.bashrc
+source /opt/nutrition-bot/venv/bin/activate</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 6 — Create <code>.env</code></p>
+    <pre><code>cat > /opt/nutrition-bot/.env &lt;&lt; 'EOF'
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=7659563001
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL_HEAVY=claude-opus-4-8
+ANTHROPIC_MODEL_MID=claude-sonnet-4-6
+ANTHROPIC_MODEL_FAST=claude-haiku-4-5-20251001
+FITBIT_CLIENT_ID=23VDST
+FITBIT_CLIENT_SECRET=
+FITBIT_REFRESH_TOKEN=
+SQLITE_DB_PATH=/opt/nutrition-bot/app.db
+KNOWLEDGE_BASE_PATH=/opt/nutrition-bot/knowledge_base
+DISKCACHE_PATH=/opt/nutrition-bot/.cache
+EOF
+chmod 600 /opt/nutrition-bot/.env</code></pre>
+
+    <p style="font-weight:600;font-size:13px;margin:8px 0 4px">Step 7 — Initialise SQLite DB</p>
+    <pre><code>sqlite3 /opt/nutrition-bot/app.db &lt; /opt/nutrition-bot/db/migrations/001_initial_schema.sql
+sqlite3 /opt/nutrition-bot/app.db ".tables"
+# Expected: 10 tables including user_profile, user_health_profile, user_nutrition_guidance</code></pre>
+
+    <ul style="margin-top:12px">
+      <li>☐ VM created and SSH accessible</li>
+      <li>☐ Firewall rule applied, snapshot schedule attached</li>
+      <li>☐ Python 3.11 venv active at <code>/opt/nutrition-bot/venv</code></li>
+      <li>☐ <code>.env</code> populated, permissions 600</li>
+      <li>☐ SQLite DB initialised — all 10 tables present</li>
+      <li>☐ Create <code>.claude/CLAUDE.md</code> and memory files (Phase 1b)</li>
+      <li>☐ Populate <code>indian_foods</code> table from IFCT / NIN India sources</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">2</div><div><div class="phase-title">DB Layer</div><div class="phase-subtitle">All query functions tested against in-memory SQLite</div></div></div>
+    <ul>
+      <li>Write tests first: insert/query meal logs, multiple health profile rows (assert latest returned), user_profile upsert, nutrition_guidance full-replacement, 7-day + 2-day queries, missing-day gaps</li>
+      <li>Implement: <code>db/models.py</code> (10 tables) + <code>db/queries.py</code></li>
+      <li>Verify: <code>pytest tests/unit/test_db_queries.py</code> — all pass</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">3</div><div><div class="phase-title">Bot Handlers</div><div class="phase-subtitle">Telegram routing before agents are wired in</div></div></div>
+    <ul>
+      <li>Tests: media group buffering, photo routing, PDF routing, commands</li>
+      <li>Implement: <code>handlers/meal.py</code>, <code>health.py</code>, <code>commands.py</code></li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">4</div><div><div class="phase-title">Agents (largest phase)</div><div class="phase-subtitle">Each agent: test → implement → verify</div></div></div>
+    <ul>
+      <li>4a MealAnalyzerAgent — food/non-food, beverages, high-GI flags, save to DB</li>
+      <li>4b HealthExtractorAgent — PDF extraction, confirmation flow, insert new row per lab date, nutrition_guidance full replacement post-confirm</li>
+      <li>4c PatternDetectorAgent — 3-day streak, escalation, diskcache dedup</li>
+      <li>4d DailySummaryAgent — aggregation, 0-meal graceful handling, score</li>
+      <li>4e WeeklyReportAgent — follow-through comparison, skip flag, week 1 exception</li>
+      <li>4f HealthInsightsAgent — follow-up Q, 2-day lookback, conversation state</li>
+      <li>4g KnowledgeIngestorAgent — PDF text extraction, Claude finding extraction, JSON file save</li>
+      <li>4h SemanticExtractionFlow — tested with 90 days of seeded data → verify facts extracted per category, empty state before 4 weeks of data</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">5</div><div><div class="phase-title">Prefect Flows</div><div class="phase-subtitle">Correct output + retry on transient failures</div></div></div>
+    <ul>
+      <li>Tests with <code>freezegun</code> + <code>respx</code>: nudge conditions, retry on 429, alert skip logic</li>
+      <li>Implement: <code>morning_report.py</code>, <code>alerts.py</code>, <code>daily_summary.py</code>, <code>weekly_report.py</code></li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">6</div><div><div class="phase-title">End-to-End Tests</div><div class="phase-subtitle">Full user journeys from Telegram update to DB state</div></div></div>
+    <ul>
+      <li>Meal logging: 3-photo album → buffer → type select → analyze → save</li>
+      <li>Health upload: PDF → extract → confirm → profile saved</li>
+      <li>Alert flow: freeze time → no meal logged → alert fires → log meal → alert skips</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header"><div class="phase-num">7</div><div><div class="phase-title">Deployment</div><div class="phase-subtitle">systemd + Prefect deploy + smoke tests</div></div></div>
+    <ul>
+      <li>Create <code>systemd</code> services for bot process + Prefect server</li>
+      <li>Deploy Prefect flow schedules: <code>prefect deploy</code></li>
+      <li>Smoke tests: food photo → end-to-end · morning report trigger · lab report PDF</li>
+      <li>Monitor Prefect dashboard for first 48hrs</li>
+    </ul>
+  </div>
+
+  <hr/>
+  <p style="font-size:13px;color:#9ca3af;text-align:center;">Nutrition Tracker Design Spec · 2026-05-25 · Single user · ~$12/month infra</p>
+
+</main>
+</body>
+</html>

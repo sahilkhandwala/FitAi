@@ -1,0 +1,11 @@
+name: PatternDetectorAgent
+model: claude-haiku-4-5-20251001
+max_tokens: 512
+recursion_limit: 3
+prompt: prompts/pattern_detector.txt
+tools:
+  - query_last_7_days
+  - get_sent_callouts
+  - send_telegram_msg
+triggers:
+  - pattern_check

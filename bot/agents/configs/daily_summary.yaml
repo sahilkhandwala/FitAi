@@ -1,0 +1,14 @@
+name: DailySummaryAgent
+model: claude-haiku-4-5-20251001
+max_tokens: 1536
+recursion_limit: 3
+prompt: prompts/daily_summary.txt
+tools:
+  - query_todays_meals
+  - send_telegram_msg
+context:
+  - health_profile
+  - user_profile
+  - nutrition_guidance
+triggers:
+  - daily_summary

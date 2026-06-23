@@ -1,0 +1,17 @@
+name: WeeklyReportAgent
+model: claude-opus-4-8
+max_tokens: 3072
+recursion_limit: 8
+prompt: prompts/weekly_report.txt
+tools:
+  - query_week_meals
+  - get_last_week_recommendations
+  - send_telegram_msg
+context:
+  - health_profile
+  - user_profile
+  - nutrition_guidance
+  - semantic_memory
+  - knowledge_base
+triggers:
+  - weekly_report

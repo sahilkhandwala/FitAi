@@ -1,0 +1,17 @@
+name: MealAnalyzerAgent
+model: claude-sonnet-4-6
+max_tokens: 1024
+recursion_limit: 5
+prompt: prompts/meal_analyzer.txt
+tools:
+  - ask_web_search_permission
+  - save_meal_analysis
+  - get_indian_food
+context:
+  - health_profile
+  - user_profile
+  - nutrition_guidance
+  - semantic_memory
+  - knowledge_base
+triggers:
+  - photo

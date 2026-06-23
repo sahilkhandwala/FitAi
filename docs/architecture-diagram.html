@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nutrition Tracker — Architecture</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 40px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 36px;
+    }
+
+    /* ── Layout columns ── */
+    .diagram {
+      display: grid;
+      grid-template-columns: 200px 1fr 200px;
+      grid-template-rows: auto auto auto;
+      gap: 0;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    /* ── Section labels ── */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      color: #475569;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    /* ── Process boxes ── */
+    .process {
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 20px;
+      background: #1e293b;
+    }
+    .process-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #334155;
+    }
+    .process-title.blue  { color: #60a5fa; border-color: #1d4ed8; }
+    .process-title.green { color: #4ade80; border-color: #166534; }
+
+    /* ── Boxes ── */
+    .box {
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .box:last-child { margin-bottom: 0; }
+
+    .box-telegram   { background: #1d3a5f; border: 1px solid #2563eb; color: #93c5fd; }
+    .box-orchestrator { background: #1a2e1a; border: 2px solid #16a34a; color: #86efac; font-weight: 700; }
+    .box-agent      { background: #1e1e2e; border: 1px solid #6366f1; color: #a5b4fc; }
+    .box-flow       { background: #1a2332; border: 1px solid #0ea5e9; color: #7dd3fc; }
+    .box-shared     { background: #1c1a2e; border: 1px solid #7c3aed; color: #c4b5fd; }
+    .box-cache      { background: #1c2128; border: 1px solid #475569; color: #94a3b8; }
+
+    .icon { font-size: 14px; }
+
+    /* ── Arrow annotations ── */
+    .arrow-label {
+      font-size: 10px;
+      color: #475569;
+      font-style: italic;
+      padding: 2px 0 2px 20px;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    /* ── Main columns ── */
+    .col-left   { padding-right: 20px; }
+    .col-center { }
+    .col-right  { padding-left: 20px; }
+
+    /* ── Center: two rows ── */
+    .center-top {
+      margin-bottom: 16px;
+    }
+    .center-bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    /* ── Shared resources row ── */
+    .shared-row {
+      grid-column: 1 / -1;
+      margin-top: 24px;
+    }
+    .shared-inner {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .shared-box {
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      border: 1px solid #334155;
+      background: #1e293b;
+    }
+    .shared-box .shared-title { font-weight: 700; font-size: 11px; color: #94a3b8; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+    .shared-box .shared-item { font-size: 11.5px; color: #64748b; margin-top: 3px; }
+    .shared-box .shared-item code { color: #a5b4fc; font-family: 'SF Mono', monospace; font-size: 11px; }
+
+    /* ── Chain indicators ── */
+    .chain {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0 4px 20px;
+    }
+    .chain-arrow { color: #334155; font-size: 11px; }
+    .chain-label { font-size: 11px; color: #475569; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #64748b; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 12px 0;
+    }
+    .divider-line { flex: 1; height: 1px; background: #334155; }
+    .divider-text { font-size: 10px; color: #475569; white-space: nowrap; text-transform: uppercase; letter-spacing: .08em; }
+
+    /* ── Route tags ── */
+    .route-tag {
+      font-size: 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: #64748b;
+      margin-left: auto;
+      white-space: nowrap;
+    }
+
+    /* ── Bypass note ── */
+    .bypass-note {
+      font-size: 10px;
+      color: #475569;
+      font-style: italic;
+      text-align: center;
+      margin: 8px 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🥗 Nutrition Tracker — Architecture</h1>
+
+<div class="diagram">
+
+  <!-- ── LEFT: Telegram entry ── -->
+  <div class="col-left">
+    <div class="section-label">Entry Point</div>
+    <div class="process">
+      <div class="process-title blue">Process 1 — Bot</div>
+
+      <div class="box box-telegram">
+        <span class="icon">📱</span> Telegram
+      </div>
+      <div class="arrow-label">↓ photo / pdf / text</div>
+
+      <div class="box box-telegram">
+        <span class="icon">🔌</span> python-telegram-bot
+      </div>
+      <div class="arrow-label">↓ validated message</div>
+
+      <div class="box box-telegram">
+        <span class="icon">🔀</span> handlers/
+        <span class="route-tag">meal · health · commands</span>
+      </div>
+    </div>
+
+    <div style="margin-top:16px; padding:10px; border:1px dashed #334155; border-radius:8px;">
+      <div class="section-label" style="margin-bottom:6px">Security</div>
+      <div style="font-size:11px; color:#64748b; line-height:1.6;">
+        All messages validated against<br/>
+        <code style="color:#a5b4fc; font-size:10.5px;">TELEGRAM_CHAT_ID=7659563001</code><br/>
+        Unknown senders → silently dropped
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CENTER: Agents ── -->
+  <div class="col-center">
+    <div class="section-label">Agent Layer (flat router pattern)</div>
+
+    <!-- Orchestrator -->
+    <div class="center-top">
+      <div class="box box-orchestrator" style="margin-bottom:0; border-radius:8px 8px 0 0;">
+        <span class="icon">🎯</span>
+        OrchestratorAgent
+        <span style="font-size:10px; color:#4ade80; margin-left:auto; font-weight:400;">classifies input → routes or answers directly</span>
+      </div>
+      <!-- Routing legend -->
+      <div style="background:#111827; border:1px solid #166534; border-top:none; border-radius:0 0 8px 8px; padding:8px 12px; display:grid; grid-template-columns:1fr 1fr; gap:3px 16px; font-size:11px;">
+        <span style="color:#64748b;">📷 photo</span><span style="color:#4ade80;">→ MealAnalyzerAgent</span>
+        <span style="color:#64748b;">📄 lab report PDF</span><span style="color:#4ade80;">→ HealthExtractorAgent</span>
+        <span style="color:#64748b;">📄 research PDF</span><span style="color:#4ade80;">→ KnowledgeIngestorAgent</span>
+        <span style="color:#64748b;">💬 symptom question</span><span style="color:#4ade80;">→ HealthInsightsAgent</span>
+        <span style="color:#64748b;">❓ general question</span><span style="color:#4ade80;">→ answers directly ✦</span>
+        <span style="color:#64748b;">⌨️ command</span><span style="color:#4ade80;">→ rule-based handler</span>
+      </div>
+    </div>
+
+    <!-- Specialists -->
+    <div class="center-bottom">
+      <div>
+        <div class="box box-agent"><span class="icon">🍽</span> MealAnalyzerAgent</div>
+        <div class="chain"><span class="chain-arrow">↓ auto-chains</span></div>
+        <div class="box box-agent"><span class="icon">📈</span> PatternDetectorAgent</div>
+      </div>
+      <div>
+        <div class="box box-agent"><span class="icon">🏥</span> HealthExtractorAgent</div>
+        <div style="margin-top:8px;">
+        <div class="box box-agent"><span class="icon">📚</span> KnowledgeIngestorAgent</div>
+        </div>
+        <div style="margin-top:8px;">
+        <div class="box box-agent"><span class="icon">💡</span> HealthInsightsAgent <span style="font-size:10px; color:#6366f1; margin-left:4px;">multi-turn</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RIGHT: Prefect flows ── -->
+  <div class="col-right">
+    <div class="section-label">Scheduled Jobs</div>
+    <div class="process">
+      <div class="process-title green">Process 2 — Prefect</div>
+
+      <div class="bypass-note">bypass Orchestrator entirely</div>
+
+      <div class="box box-flow"><span class="icon">☀️</span> 10:30am <span class="route-tag">morning_report</span></div>
+      <div class="box box-flow"><span class="icon">🍽</span> 3:00pm <span class="route-tag">lunch_alert</span></div>
+      <div class="box box-flow"><span class="icon">🌙</span> 10:30pm <span class="route-tag">dinner_alert</span></div>
+      <div class="box box-flow">
+        <span class="icon">📋</span> 11:30pm
+        <span class="route-tag">daily_summary</span>
+      </div>
+      <div class="chain" style="margin-left:12px;"><span class="chain-arrow">↓</span><span class="chain-label" style="font-size:10px;">DailySummaryAgent → PatternDetectorAgent</span></div>
+      <div class="box box-flow">
+        <span class="icon">🧠</span> Sun 6pm
+        <span class="route-tag">semantic_extraction</span>
+      </div>
+      <div class="chain" style="margin-left:12px;"><span class="chain-arrow">↓</span><span class="chain-label" style="font-size:10px;">90-day window → extract facts → user_semantic_memory</span></div>
+      <div class="box box-flow">
+        <span class="icon">📊</span> Sun 8pm
+        <span class="route-tag">weekly_report</span>
+      </div>
+      <div class="chain" style="margin-left:12px;"><span class="chain-arrow">↓</span><span class="chain-label" style="font-size:10px;">WeeklyReportAgent → PatternDetectorAgent</span></div>
+    </div>
+  </div>
+
+  <!-- ── BOTTOM: Shared resources ── -->
+  <div class="shared-row">
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">Shared Resources — both processes read/write</div>
+      <div class="divider-line"></div>
+    </div>
+    <div class="shared-inner">
+      <div class="shared-box">
+        <div class="shared-title">🗄 SQLite (WAL)</div>
+        <div class="shared-item">meal_logs</div>
+        <div class="shared-item">daily_health_logs</div>
+        <div class="shared-item">user_health_profile</div>
+        <div class="shared-item">weekly_reports</div>
+        <div class="shared-item">patterns · indian_foods</div>
+        <div class="shared-item"><code>user_semantic_memory</code></div>
+        <div class="shared-item">LangGraph checkpoints</div>
+      </div>
+      <div class="shared-box">
+        <div class="shared-title">📁 knowledge_base/</div>
+        <div class="shared-item">One <code>.json</code> per article</div>
+        <div class="shared-item">~10–20 files, ~6k tokens</div>
+        <div class="shared-item">Always loaded in full</div>
+        <div class="shared-item">No retrieval step</div>
+      </div>
+      <div class="shared-box">
+        <div class="shared-title">⚡ cachetools (memory)</div>
+        <div class="shared-item"><code>media_buffer</code> 2s TTL</div>
+        <div class="shared-item">Album photo buffering</div>
+        <div class="shared-item"><code>health_profile</code> 1hr TTL</div>
+        <div class="shared-item">Lost on restart — OK</div>
+      </div>
+      <div class="shared-box">
+        <div class="shared-title">💾 diskcache (SQLite)</div>
+        <div class="shared-item"><code>callout:{date}:{type}</code> 24hr</div>
+        <div class="shared-item">Pattern dedup</div>
+        <div class="shared-item"><code>fitbit_token</code> — persistent</div>
+        <div class="shared-item"><code>onboarding_prompt_sent</code></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#2563eb;"></div> Bot process (real-time)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#16a34a;"></div> Orchestrator / router</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6366f1;"></div> Specialist agents</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0ea5e9;"></div> Prefect flows (scheduled)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#7c3aed;"></div> Shared storage</div>
+  <div class="legend-item" style="margin-left:10px; font-style:italic;">✦ OrchestratorAgent answers general questions directly — no specialist needed</div>
+</div>
+
+<p style="text-align:center; margin-top:24px; font-size:11px; color:#334155;">
+  Flat router pattern · 8 agents · ~$12/month infra · Single user
+</p>
+
+</body>
+</html>

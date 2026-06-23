@@ -1,0 +1,9 @@
+name: KnowledgeIngestorAgent
+model: claude-sonnet-4-6
+max_tokens: 1536
+recursion_limit: 3
+prompt: prompts/knowledge_ingestor.txt
+tools:
+  - save_to_knowledge_base
+triggers:
+  - research_article

@@ -1,0 +1,20 @@
+name: HealthInsightsAgent
+model: claude-opus-4-8
+max_tokens: 1536
+recursion_limit: 10
+prompt: prompts/health_insights.txt
+tools:
+  - query_last_2_days_meals
+  - query_last_2_days_steps
+  - query_last_2_days_sleep
+  - ask_web_search_permission
+  - send_telegram_msg
+context:
+  - health_profile
+  - user_profile
+  - nutrition_guidance
+  - semantic_memory
+  - knowledge_base
+checkpointer: true
+triggers:
+  - health_question

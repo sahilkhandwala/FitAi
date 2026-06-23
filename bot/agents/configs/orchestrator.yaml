@@ -1,0 +1,17 @@
+name: OrchestratorAgent
+model: claude-haiku-4-5-20251001
+max_tokens: 512
+recursion_limit: 3
+prompt: prompts/orchestrator.txt
+tools:
+  - get_health_profile
+  - get_user_profile
+  - get_nutrition_guidance
+  - get_semantic_memory
+  - query_knowledge_base
+  - ask_web_search_permission
+  - send_telegram_msg
+triggers:
+  - text
+  - command
+  - pdf

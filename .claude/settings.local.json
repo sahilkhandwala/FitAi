@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp /Users/sahilkhandwala/docs/superpowers/specs/2026-05-25-nutrition-tracker-design.md /Users/sahilkhandwala/Desktop/FitAi/docs/nutrition-tracker-design.md)",
+      "Bash(cp /Users/sahilkhandwala/docs/superpowers/specs/2026-05-25-nutrition-tracker-design.html /Users/sahilkhandwala/Desktop/FitAi/docs/nutrition-tracker-design.html)",
+      "Bash(cp /Users/sahilkhandwala/docs/superpowers/specs/2026-05-25-architecture-diagram.html /Users/sahilkhandwala/Desktop/FitAi/docs/architecture-diagram.html)",
+      "WebFetch(domain:aws.amazon.com)",
+      "Bash(gcloud auth *)",
+      "Bash(gcloud config *)",
+      "Bash(gcloud compute instances list *)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.langwatch.ai)",
+      "WebFetch(domain:langwatch.ai)",
+      "Bash(pip install *)",
+      "Bash(python -m pytest tests/unit/ -v)",
+      "Bash(python -m pytest tests/unit/ -v --tb=short)",
+      "Bash(python -m pytest tests/unit/ tests/integration/ -v --tb=short)",
+      "Bash(python -m pytest tests/unit/ tests/integration/ --tb=no -q)",
+      "Bash(python -m pytest tests/integration/test_health_extractor.py::TestHealthExtractorInvocation::test_health_extractor_handles_missing_fields -v --tb=long)",
+      "Bash(python *)",
+      "Bash(pip show *)",
+      "Bash(python3 -c \"import prefect; print\\(prefect.__version__\\)\")",
+      "Bash(pip list *)",
+      "Bash(grep -n \"TODO\\\\|onboarding\\\\|NOT YET\\\\|stub\\\\|pass$\\\\|placeholder\" /Users/sahilkhandwala/Desktop/FitAi/flows/morning_report.py /Users/sahilkhandwala/Desktop/FitAi/flows/alerts.py /Users/sahilkhandwala/Desktop/FitAi/flows/daily_summary.py /Users/sahilkhandwala/Desktop/FitAi/flows/semantic_extraction.py /Users/sahilkhandwala/Desktop/FitAi/flows/weekly_report.py)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

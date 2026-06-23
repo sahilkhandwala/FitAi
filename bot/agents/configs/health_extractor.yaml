@@ -1,0 +1,11 @@
+name: HealthExtractorAgent
+model: claude-sonnet-4-6
+max_tokens: 768
+recursion_limit: 5
+prompt: prompts/health_extractor.txt
+tools:
+  - confirm_with_user
+  - save_health_profile
+  - generate_nutrition_guidance
+triggers:
+  - lab_report
