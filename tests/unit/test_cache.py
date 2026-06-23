@@ -6,7 +6,7 @@ import pytest
 @pytest.fixture
 def cache_instance(tmp_path, monkeypatch):
     """Patch DISKCACHE_DIR to a temp path so tests don't write to real cache."""
-    monkeypatch.setattr("config.DISKCACHE_DIR", str(tmp_path / "cache"))
+    monkeypatch.setattr("bot.cache.DISKCACHE_DIR", str(tmp_path / "cache"))
     # Force module-level singleton to reset between tests
     import bot.cache as bc
     bc._cache = None
