@@ -3,6 +3,7 @@ model: claude-sonnet-4-6
 max_tokens: 1024
 recursion_limit: 5
 prompt: prompts/meal_analyzer.txt
+checkpointer: true
 tools:
   - ask_web_search_permission
   - save_meal_analysis

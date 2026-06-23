@@ -3,6 +3,7 @@ model: claude-sonnet-4-6
 max_tokens: 768
 recursion_limit: 5
 prompt: prompts/health_extractor.txt
+checkpointer: true
 tools:
   - confirm_with_user
   - save_health_profile
