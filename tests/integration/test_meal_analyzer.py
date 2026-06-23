@@ -302,3 +302,29 @@ class TestMealAnalyzerContextInjection:
         agent = MealAnalyzerAgent()
         # Recognizable text from the meal_analyzer prompt
         assert "nutrition" in agent.system_prompt.lower() or "food" in agent.system_prompt.lower()
+
+
+class TestMealHandlerWiring:
+    """Tests that verify the handler wires to the agent correctly."""
+
+    def test_invoke_with_photo_state_returns_messages(self, session, mock_anthropic):
+        """MealAnalyzerAgent.invoke() with a photo-style state returns messages."""
+        from bot.agents.tool_registry import init_tools
+        from bot.agents.agent_loader import load_agent
+        from langchain_core.messages import HumanMessage
+        from pathlib import Path
+
+        init_tools(session)
+        agent = load_agent(Path("bot/agents/configs/meal_analyzer.yaml"))
+        state = {
+            "input_type": "photo",
+            "telegram_chat_id": 123456789,
+            "messages": [HumanMessage(content="Analyze this lunch photo. [1 photo]")],
+            "media_group_id": None,
+            "photos": ["fake_file_id_1"],
+            "analysis_result": None,
+            "next_agent": None,
+        }
+        result = agent.invoke(state, thread_id="test-meal-wiring")
+        assert "messages" in result
+        assert len(result["messages"]) >= 1

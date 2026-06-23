@@ -9,3 +9,4 @@ tools:
   - send_telegram_msg
 triggers:
   - pattern_check
+  - pattern_detector
