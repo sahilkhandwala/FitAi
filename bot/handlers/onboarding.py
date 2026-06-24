@@ -159,8 +159,8 @@ async def maybe_send_onboarding_prompt(
 ) -> bool:
     """
     If onboarding is complete but no lab report has been uploaded,
-    append a one-time tip. Returns True if the tip was sent (caller should
-    not process the message further in that case — the user may be mid-flow).
+    append a one-time tip. Always returns False — fires the tip as a side effect
+    but does not block further message processing.
     """
     if has_sent_onboarding_prompt():
         return False
