@@ -20,6 +20,7 @@ from bot.handlers.commands import (
     handle_help_command,
     handle_profile_command,
     handle_text_message,
+    handle_websearch_callback,
 )
 from bot.handlers.health import handle_document, handle_labconfirm_callback
 from bot.handlers.meal import handle_meal_type_callback, handle_photo
@@ -74,6 +75,7 @@ def create_application() -> Application:
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     app.add_handler(CallbackQueryHandler(handle_meal_type_callback, pattern="^meal_type:"))
     app.add_handler(CallbackQueryHandler(handle_labconfirm_callback, pattern="^labconfirm:"))
+    app.add_handler(CallbackQueryHandler(handle_websearch_callback, pattern="^websearch:"))
 
     app.job_queue.run_repeating(heartbeat, interval=300, first=10)
 
