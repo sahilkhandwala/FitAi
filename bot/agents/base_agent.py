@@ -98,14 +98,19 @@ class BaseAgent:
         else:
             builder.add_edge("call_model", END)
 
-        # Checkpointer for multi-turn agents (HealthInsightsAgent)
+        # Checkpointer for multi-turn agents (HealthInsightsAgent, MealAnalyzerAgent, HealthExtractorAgent)
         if self.use_checkpointer:
             # Lazy import — langgraph-checkpoint-sqlite is optional
             try:
-                from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+                import sqlite3
+                from langgraph.checkpoint.sqlite import SqliteSaver
                 from config import SQLITE_DB_PATH
 
-                checkpointer = AsyncSqliteSaver.from_conn_string(SQLITE_DB_PATH)
+                # Use a separate DB file for checkpoints so WAL-mode nutrition.db is unaffected.
+                # check_same_thread=False is required: graph.invoke() runs in thread-pool executors.
+                checkpoints_path = SQLITE_DB_PATH + "-checkpoints.db"
+                conn = sqlite3.connect(checkpoints_path, check_same_thread=False)
+                checkpointer = SqliteSaver(conn)
                 return builder.compile(checkpointer=checkpointer)
             except ImportError:
                 # If the optional package is missing, fall back to no checkpointer

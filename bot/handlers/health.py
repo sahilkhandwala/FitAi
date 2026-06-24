@@ -67,7 +67,6 @@ async def handle_document(update: "Update", context: "ContextTypes.DEFAULT_TYPE"
     """
     Called for all document uploads. Processes PDFs only.
     """
-    from langgraph.errors import GraphInterrupt
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
     from bot.agents.agent_loader import AGENT_REGISTRY
     from bot.agents.tool_registry import AGENT_NAME_TO_TRIGGER
@@ -132,21 +131,21 @@ async def handle_document(update: "Update", context: "ContextTypes.DEFAULT_TYPE"
         )
         thread_id = None  # KnowledgeIngestorAgent doesn't need checkpointing
 
-    try:
-        await loop.run_in_executor(
-            None, lambda: specialist.invoke(specialist_state, thread_id=thread_id)
-        )
-        clear_paused_agent()
-
-    except GraphInterrupt as exc:
+    result = await loop.run_in_executor(
+        None, lambda: specialist.invoke(specialist_state, thread_id=thread_id)
+    )
+    interrupts = result.get("__interrupt__") if isinstance(result, dict) else None
+    if interrupts:
         # HealthExtractorAgent paused at confirm_with_user — show confirmation keyboard
-        interrupt_msg = exc.interrupts[0].value if exc.interrupts else "Does this look right?"
+        interrupt_msg = interrupts[0].value if interrupts else "Does this look right?"
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton("Confirm ✅", callback_data="labconfirm:yes"),
             InlineKeyboardButton("Re-upload 🔄", callback_data="labconfirm:reupload"),
         ]])
         await update.message.reply_text(interrupt_msg, reply_markup=keyboard)
         set_paused_agent("lab_report")
+    else:
+        clear_paused_agent()
 
 
 async def handle_labconfirm_callback(

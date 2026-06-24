@@ -90,7 +90,7 @@ def _format_profile(profile_row, health_row) -> str:
             f"{profile_row.fat_target_g or '?'}g fat\n"
         )
     else:
-        lines.append("No user profile set yet. Send /profile update to add details.\n")
+        lines.append("No user profile set yet. Use /profileupdate to add details.\n")
 
     if health_row:
         lines.append(
@@ -254,7 +254,6 @@ async def handle_text_message(
     3. Route to OrchestratorAgent
     4. If orchestrator routes to HealthInsightsAgent, invoke it
     """
-    from langgraph.errors import GraphInterrupt
     from langgraph.types import Command
     from bot.agents.agent_loader import AGENT_REGISTRY
     from bot.agents.tool_registry import AGENT_NAME_TO_TRIGGER
@@ -287,19 +286,21 @@ async def handle_text_message(
             await update.message.reply_text("Sorry, I lost track of what we were doing — please start again.")
             return
         thread_id = _thread_id_for_trigger(paused_trigger)
-        try:
-            # Resume interrupted graph directly — bypasses BaseAgent.invoke() which would reset the graph
-            await loop.run_in_executor(
-                None,
-                lambda: agent.graph.invoke(
-                    Command(resume=text),
-                    config={"configurable": {"thread_id": thread_id}},
-                ),
-            )
-            clear_paused_agent()
-        except GraphInterrupt as exc:
-            interrupt_msg = exc.interrupts[0].value if exc.interrupts else text
+        # Resume interrupted graph directly — bypasses BaseAgent.invoke() which would reset the graph
+        resume_result = await loop.run_in_executor(
+            None,
+            lambda: agent.graph.invoke(
+                Command(resume=text),
+                config={"configurable": {"thread_id": thread_id}},
+            ),
+        )
+        resume_interrupts = resume_result.get("__interrupt__") if isinstance(resume_result, dict) else None
+        if resume_interrupts:
+            # Re-interrupted (e.g. chained permission request)
+            interrupt_msg = resume_interrupts[0].value if resume_interrupts else text
             await update.message.reply_text(interrupt_msg)
+        else:
+            clear_paused_agent()
         return
 
     # 2. "skip comparison" special case — write to weekly_reports if a report exists
@@ -326,10 +327,10 @@ async def handle_text_message(
         "next_agent": None,
     }
 
-    try:
-        orch_result = await loop.run_in_executor(None, lambda: orchestrator.invoke(state))
-    except GraphInterrupt as exc:
-        interrupt_msg = exc.interrupts[0].value if exc.interrupts else "Waiting for your response..."
+    orch_result = await loop.run_in_executor(None, lambda: orchestrator.invoke(state))
+    orch_interrupts = orch_result.get("__interrupt__") if isinstance(orch_result, dict) else None
+    if orch_interrupts:
+        interrupt_msg = orch_interrupts[0].value if orch_interrupts else "Waiting for your response..."
         await update.message.reply_text(interrupt_msg)
         set_paused_agent("text")
         return
@@ -341,13 +342,13 @@ async def handle_text_message(
         specialist = AGENT_REGISTRY.get(trigger)
         if specialist is not None:
             thread_id = f"insights-{TELEGRAM_CHAT_ID}"
-            try:
-                # Fresh invocation via BaseAgent.invoke() — builds config and context injection
-                await loop.run_in_executor(
-                    None, lambda: specialist.invoke(state, thread_id=thread_id)
-                )
-            except GraphInterrupt as exc:
-                interrupt_msg = exc.interrupts[0].value if exc.interrupts else "Can I search the web?"
+            # Fresh invocation via BaseAgent.invoke() — builds config and context injection
+            specialist_result = await loop.run_in_executor(
+                None, lambda: specialist.invoke(state, thread_id=thread_id)
+            )
+            specialist_interrupts = specialist_result.get("__interrupt__") if isinstance(specialist_result, dict) else None
+            if specialist_interrupts:
+                interrupt_msg = specialist_interrupts[0].value if specialist_interrupts else "Can I search the web?"
                 await update.message.reply_text(interrupt_msg)
                 set_paused_agent("health_question")
 

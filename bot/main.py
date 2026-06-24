@@ -19,6 +19,7 @@ from bot.handlers.commands import (
     handle_addfood_command,
     handle_help_command,
     handle_profile_command,
+    handle_profile_update,
     handle_text_message,
     handle_websearch_callback,
 )
@@ -69,6 +70,7 @@ def create_application() -> Application:
     )
 
     app.add_handler(CommandHandler("profile", handle_profile_command))
+    app.add_handler(CommandHandler("profileupdate", handle_profile_update))
     app.add_handler(CommandHandler("help", handle_help_command))
     app.add_handler(CommandHandler("addfood", handle_addfood_command))
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))

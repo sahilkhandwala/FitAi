@@ -116,9 +116,8 @@ async def handle_meal_type_callback(
 ) -> None:
     """
     User tapped a meal type button. Downloads photos, invokes MealAnalyzerAgent,
-    then PatternDetectorAgent. Handles GraphInterrupt for web search permission.
+    then PatternDetectorAgent. Handles interrupt for web search permission.
     """
-    from langgraph.errors import GraphInterrupt
     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
     query = update.callback_query
@@ -179,20 +178,12 @@ async def handle_meal_type_callback(
     thread_id = f"meal-{TELEGRAM_CHAT_ID}"
     loop = asyncio.get_running_loop()
 
-    try:
-        await loop.run_in_executor(
-            None, lambda: agent.invoke(state, thread_id=thread_id)
-        )
-        clear_paused_agent()
-        await context.bot.send_message(
-            chat_id=TELEGRAM_CHAT_ID,
-            text=f"Got it! Your {meal_type} has been logged 📷",
-        )
-        # Fire PatternDetectorAgent in background (non-blocking)
-        asyncio.ensure_future(_run_pattern_detector())
-
-    except GraphInterrupt as exc:
-        interrupt_msg = exc.interrupts[0].value if exc.interrupts else "Can I search the web?"
+    result = await loop.run_in_executor(
+        None, lambda: agent.invoke(state, thread_id=thread_id)
+    )
+    interrupts = result.get("__interrupt__") if isinstance(result, dict) else None
+    if interrupts:
+        interrupt_msg = interrupts[0].value if interrupts else "Can I search the web?"
         keyboard = InlineKeyboardMarkup([[
             InlineKeyboardButton("Yes, go ahead 🔍", callback_data="websearch:yes"),
             InlineKeyboardButton("No thanks", callback_data="websearch:no"),
@@ -201,6 +192,15 @@ async def handle_meal_type_callback(
             chat_id=TELEGRAM_CHAT_ID, text=interrupt_msg, reply_markup=keyboard
         )
         set_paused_agent("photo")
+        return
+
+    clear_paused_agent()
+    await context.bot.send_message(
+        chat_id=TELEGRAM_CHAT_ID,
+        text=f"Got it! Your {meal_type} has been logged 📷",
+    )
+    # Fire PatternDetectorAgent in background (non-blocking)
+    asyncio.ensure_future(_run_pattern_detector())
 
 
 async def _run_pattern_detector() -> None:
