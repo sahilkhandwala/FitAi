@@ -170,11 +170,24 @@ async def handle_labconfirm_callback(
 
     thread_id = f"health-extract-{TELEGRAM_CHAT_ID}"
     loop = asyncio.get_running_loop()
-    await loop.run_in_executor(
-        None,
-        lambda: agent.graph.invoke(
-            Command(resume=choice),
-            config={"configurable": {"thread_id": thread_id}},
+    error_occurred = False
+    try:
+        await loop.run_in_executor(
+            None,
+            lambda: agent.graph.invoke(
+                Command(resume=choice),
+                config={"configurable": {"thread_id": thread_id}},
+            ),
         )
-    )
-    clear_paused_agent()
+    except Exception as e:
+        logger.error("Error resuming HealthExtractorAgent: %s", e)
+        await query.edit_message_text("Something went wrong — please re-send your lab report PDF.")
+        error_occurred = True
+    finally:
+        clear_paused_agent()
+
+    if not error_occurred and choice == "reupload":
+        await context.bot.send_message(
+            chat_id=TELEGRAM_CHAT_ID,
+            text="No problem! Please re-send your lab report PDF and I'll try again."
+        )
