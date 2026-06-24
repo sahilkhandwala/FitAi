@@ -263,6 +263,18 @@ async def handle_text_message(
     if update.message.chat_id != TELEGRAM_CHAT_ID:
         return
 
+    # Onboarding check
+    from bot.handlers.onboarding import is_onboarding_needed, start_onboarding, maybe_send_onboarding_prompt
+    from bot.agents.tool_registry import _get_session
+    try:
+        session = _get_session()
+        if is_onboarding_needed(session):
+            await start_onboarding(update, context)
+            return
+        await maybe_send_onboarding_prompt(update, context, session)
+    except RuntimeError:
+        pass  # session not ready at startup
+
     text = update.message.text or ""
     loop = asyncio.get_running_loop()
 
