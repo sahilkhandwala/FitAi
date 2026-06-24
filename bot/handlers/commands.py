@@ -270,21 +270,25 @@ async def handle_text_message(
     paused_trigger = get_paused_agent()
     if paused_trigger is not None:
         agent = AGENT_REGISTRY.get(paused_trigger)
-        if agent is not None:
-            thread_id = _thread_id_for_trigger(paused_trigger)
-            try:
-                await loop.run_in_executor(
-                    None,
-                    lambda: agent.graph.invoke(
-                        Command(resume=text),
-                        config={"configurable": {"thread_id": thread_id}},
-                    ),
-                )
-                clear_paused_agent()
-            except GraphInterrupt as exc:
-                interrupt_msg = exc.interrupts[0].value if exc.interrupts else text
-                await update.message.reply_text(interrupt_msg)
+        if agent is None:
+            clear_paused_agent()
+            await update.message.reply_text("Sorry, I lost track of what we were doing — please start again.")
             return
+        thread_id = _thread_id_for_trigger(paused_trigger)
+        try:
+            # Resume interrupted graph directly — bypasses BaseAgent.invoke() which would reset the graph
+            await loop.run_in_executor(
+                None,
+                lambda: agent.graph.invoke(
+                    Command(resume=text),
+                    config={"configurable": {"thread_id": thread_id}},
+                ),
+            )
+            clear_paused_agent()
+        except GraphInterrupt as exc:
+            interrupt_msg = exc.interrupts[0].value if exc.interrupts else text
+            await update.message.reply_text(interrupt_msg)
+        return
 
     # 2. "skip comparison" special case — write to weekly_reports if a report exists
     if is_skip_comparison_message(text):
@@ -326,6 +330,7 @@ async def handle_text_message(
         if specialist is not None:
             thread_id = f"insights-{TELEGRAM_CHAT_ID}"
             try:
+                # Fresh invocation via BaseAgent.invoke() — builds config and context injection
                 await loop.run_in_executor(
                     None, lambda: specialist.invoke(state, thread_id=thread_id)
                 )
@@ -346,16 +351,14 @@ def _thread_id_for_trigger(trigger: str) -> str:
 
 def _write_skip_comparison() -> None:
     """Write skip_comparison=1 to the most recent weekly_reports row, if one exists."""
-    from datetime import date, timedelta
+    from datetime import datetime, timedelta
     from zoneinfo import ZoneInfo
     from bot.agents.tool_registry import _get_session
     from db.models import WeeklyReport
 
-    LA = ZoneInfo("America/Los_Angeles")
-
     try:
         session = _get_session()
-        today = date.today()
+        today = datetime.now(ZoneInfo("America/Los_Angeles")).date()
         # Compute Monday of the current week (LA time)
         week_start = str(today - timedelta(days=today.weekday()))
         row = session.query(WeeklyReport).filter_by(week_start=week_start).first()
