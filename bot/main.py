@@ -21,7 +21,7 @@ from bot.handlers.commands import (
     handle_profile_command,
     handle_text_message,
 )
-from bot.handlers.health import handle_document
+from bot.handlers.health import handle_document, handle_labconfirm_callback
 from bot.handlers.meal import handle_meal_type_callback, handle_photo
 from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, UPTIME_KUMA_PUSH_URL
 from db import get_engine, get_session_factory
@@ -73,6 +73,7 @@ def create_application() -> Application:
     app.add_handler(MessageHandler(filters.Document.PDF, handle_document))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_message))
     app.add_handler(CallbackQueryHandler(handle_meal_type_callback, pattern="^meal_type:"))
+    app.add_handler(CallbackQueryHandler(handle_labconfirm_callback, pattern="^labconfirm:"))
 
     app.job_queue.run_repeating(heartbeat, interval=300, first=10)
 
