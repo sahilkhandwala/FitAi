@@ -1,0 +1,42 @@
+# Secrets
+.env
+*.env
+
+# Cache
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# DB files
+*.db
+*.db-checkpoints.db
+*.db-shm
+*.db-wal
+
+# Logs / traces
+logs/
+*.log
+
+# Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Prefect
+.prefect/
+
+# Knowledge base is part of source
+# knowledge_base/ — keep this tracked
+
+# Superpowers scratch
+.superpowers/
