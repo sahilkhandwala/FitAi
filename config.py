@@ -25,9 +25,9 @@ ANTHROPIC_MODEL_HEAVY = os.getenv("ANTHROPIC_MODEL_HEAVY", "claude-opus-4-8")
 ANTHROPIC_MODEL_MID = os.getenv("ANTHROPIC_MODEL_MID", "claude-sonnet-4-6")
 ANTHROPIC_MODEL_FAST = os.getenv("ANTHROPIC_MODEL_FAST", "claude-haiku-4-5-20251001")
 
-# Fitbit
-FITBIT_CLIENT_ID = os.getenv("FITBIT_CLIENT_ID", "")
-FITBIT_CLIENT_SECRET = os.getenv("FITBIT_CLIENT_SECRET", "")
+# Google Health API (replaces Fitbit Web API)
+GOOGLE_HEALTH_CLIENT_ID = os.getenv("GOOGLE_HEALTH_CLIENT_ID", "")
+GOOGLE_HEALTH_CLIENT_SECRET = os.getenv("GOOGLE_HEALTH_CLIENT_SECRET", "")
 
 # Open-Meteo (Mountain View, CA)
 WEATHER_LAT = float(os.getenv("WEATHER_LAT", "37.3861"))

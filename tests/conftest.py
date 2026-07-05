@@ -122,24 +122,43 @@ def mock_anthropic(monkeypatch):
 
 
 @pytest.fixture
-def mock_fitbit(monkeypatch):
-    """Monkeypatch requests.get for Fitbit API calls."""
+def mock_health_api(monkeypatch):
+    """Monkeypatch requests.post for Google Health API calls."""
     import requests
 
-    class FakeResponse:
+    class FakeStepsResponse:
         status_code = 200
 
         def json(self):
             return {
-                "activities-steps": [{"dateTime": "2026-06-22", "value": "8000"}],
-                "sleep": {"summary": {"totalTimeInBed": 420}},
+                "rollupDataPoints": [
+                    {"civilStartTime": {"year": 2026, "month": 6, "day": 22}, "steps": {"count_sum": 8000}}
+                ]
             }
 
         def raise_for_status(self):
             pass
 
-    monkeypatch.setattr(requests, "get", lambda *a, **kw: FakeResponse())
-    return FakeResponse
+    class FakeSleepResponse:
+        status_code = 200
+
+        def json(self):
+            return {
+                "rollupDataPoints": [
+                    {"civilStartTime": {"year": 2026, "month": 6, "day": 22}, "sleep": {"totalSleepMinutes": 420}}
+                ]
+            }
+
+        def raise_for_status(self):
+            pass
+
+    def fake_post(url, **kwargs):
+        if "steps" in url:
+            return FakeStepsResponse()
+        return FakeSleepResponse()
+
+    monkeypatch.setattr(requests, "post", fake_post)
+    return fake_post
 
 
 @pytest.fixture

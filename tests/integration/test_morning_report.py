@@ -1,7 +1,7 @@
 """
 Integration tests for flows/morning_report.py.
 
-All external calls (Fitbit, weather, Claude, Telegram) are mocked.
+All external calls (Google Health API, weather, Claude, Telegram) are mocked.
 Prefect test harness is used so flows run inline without a real server.
 """
 
@@ -30,71 +30,66 @@ def _make_fake_llm(monkeypatch):
     return FakeLLM
 
 
-def _fake_fitbit_response():
-    """Return a mock requests.Response for Fitbit API calls."""
-    resp = MagicMock()
-    resp.status_code = 200
-    resp.raise_for_status = MagicMock()
-    resp.json.side_effect = [
-        # steps endpoint
-        {"activities-steps": [{"dateTime": "2026-06-21", "value": "8000"}]},
-        # sleep endpoint
-        {"sleep": {"summary": {"totalTimeInBed": 420}}},
-    ]
-    return resp
-
-
-def _fake_requests_post_ok():
-    """Return a mock that simulates a successful Telegram sendMessage."""
-    resp = MagicMock()
-    resp.status_code = 200
-    resp.raise_for_status = MagicMock()
-    return resp
+def _make_health_api_post(steps=8000, sleep_minutes=420):
+    """Return a fake requests.post that mimics Google Health API dailyRollUp responses."""
+    def fake_post(url, json=None, headers=None, timeout=None, **kwargs):
+        resp = MagicMock()
+        resp.status_code = 200
+        resp.raise_for_status = MagicMock()
+        if "steps" in url:
+            resp.json.return_value = {
+                "rollupDataPoints": [{"steps": {"count_sum": steps}}]
+            }
+        elif "sleep" in url:
+            resp.json.return_value = {
+                "rollupDataPoints": [{"sleep": {"totalSleepMinutes": sleep_minutes}}]
+            }
+        else:
+            # Telegram sendMessage or other POST
+            resp.json.return_value = {}
+        return resp
+    return fake_post
 
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
 
-class TestFetchFitbitData:
-    def test_morning_report_fetches_fitbit_data(self, monkeypatch, tmp_path):
-        """fetch_fitbit_data task runs without error when Fitbit API returns data."""
+class TestFetchHealthData:
+    def test_fetch_health_data_returns_steps_and_sleep(self, monkeypatch, tmp_path):
+        """fetch_health_data task parses Google Health API dailyRollUp responses."""
         import diskcache
+        import time
 
-        # Put a fake token in a temp diskcache
         cache = diskcache.Cache(str(tmp_path / "cache"))
-        cache["fitbit_token"] = {"access_token": "fake-token"}
-
-        monkeypatch.setenv("DISKCACHE_DIR", str(tmp_path / "cache"))
-        # Patch config.DISKCACHE_DIR used in flow
-        monkeypatch.setattr("flows.morning_report.DISKCACHE_DIR", str(tmp_path / "cache"))
-
-        get_mock = MagicMock(side_effect=_fake_fitbit_response().json.side_effect)
-        step_resp = MagicMock()
-        step_resp.raise_for_status = MagicMock()
-        step_resp.json.return_value = {
-            "activities-steps": [{"dateTime": "2026-06-21", "value": "8000"}]
+        cache["health_api_token"] = {
+            "access_token": "fake-token",
+            "refresh_token": "fake-refresh",
+            "expires_at": time.time() + 3600,
         }
-        sleep_resp = MagicMock()
-        sleep_resp.raise_for_status = MagicMock()
-        sleep_resp.json.return_value = {"sleep": {"summary": {"totalTimeInBed": 420}}}
 
-        call_count = [0]
-
-        def fake_get(url, **kwargs):
-            call_count[0] += 1
-            if call_count[0] == 1:
-                return step_resp
-            return sleep_resp
-
-        monkeypatch.setattr("requests.get", fake_get)
+        monkeypatch.setattr("flows.morning_report.DISKCACHE_DIR", str(tmp_path / "cache"))
+        monkeypatch.setattr("requests.post", _make_health_api_post(steps=8000, sleep_minutes=420))
 
         with prefect_test_harness():
-            from flows.morning_report import fetch_fitbit_data
-            result = fetch_fitbit_data.fn("2026-06-21")
+            from flows.morning_report import fetch_health_data
+            result = fetch_health_data.fn("2026-06-21")
 
         assert result["steps"] == 8000
         assert result["sleep_minutes"] == 420
+
+    def test_fetch_health_data_no_token_returns_zeros(self, monkeypatch, tmp_path):
+        """fetch_health_data returns zero data when no token is in cache."""
+        import diskcache
+
+        diskcache.Cache(str(tmp_path / "cache"))  # empty cache
+        monkeypatch.setattr("flows.morning_report.DISKCACHE_DIR", str(tmp_path / "cache"))
+
+        with prefect_test_harness():
+            from flows.morning_report import fetch_health_data
+            result = fetch_health_data.fn("2026-06-21")
+
+        assert result == {"steps": 0, "sleep_minutes": 0}
 
 
 class TestFetchWeather:
@@ -178,31 +173,16 @@ class TestMorningReportFlowEndToEnd:
             pytest.skip("openmeteo_requests not installed")
 
         import diskcache
+        import time
 
         # Set up fake diskcache token
         cache = diskcache.Cache(str(tmp_path / "cache"))
-        cache["fitbit_token"] = {"access_token": "fake-token"}
-        monkeypatch.setattr("flows.morning_report.DISKCACHE_DIR", str(tmp_path / "cache"))
-
-        # Mock Fitbit requests.get
-        step_resp = MagicMock()
-        step_resp.raise_for_status = MagicMock()
-        step_resp.json.return_value = {
-            "activities-steps": [{"dateTime": "2026-06-21", "value": "7500"}]
+        cache["health_api_token"] = {
+            "access_token": "fake-token",
+            "refresh_token": "fake-refresh",
+            "expires_at": time.time() + 3600,
         }
-        sleep_resp = MagicMock()
-        sleep_resp.raise_for_status = MagicMock()
-        sleep_resp.json.return_value = {"sleep": {"summary": {"totalTimeInBed": 450}}}
-
-        call_count = [0]
-
-        def fake_get(url, **kwargs):
-            call_count[0] += 1
-            if call_count[0] == 1:
-                return step_resp
-            return sleep_resp
-
-        monkeypatch.setattr("requests.get", fake_get)
+        monkeypatch.setattr("flows.morning_report.DISKCACHE_DIR", str(tmp_path / "cache"))
 
         # Mock Open-Meteo
         class FakeVar:
@@ -232,13 +212,20 @@ class TestMorningReportFlowEndToEnd:
         # Mock Claude
         _make_fake_llm(monkeypatch)
 
-        # Mock Telegram
+        # Mock all POST calls: Google Health API + Telegram
         post_calls = []
 
-        def fake_post(url, json=None, timeout=None):
+        def fake_post(url, json=None, headers=None, data=None, timeout=None, **kwargs):
             post_calls.append({"url": url, "json": json})
             resp = MagicMock()
+            resp.status_code = 200
             resp.raise_for_status = MagicMock()
+            if "steps" in url:
+                resp.json.return_value = {"rollupDataPoints": [{"steps": {"count_sum": 7500}}]}
+            elif "sleep" in url:
+                resp.json.return_value = {"rollupDataPoints": [{"sleep": {"totalSleepMinutes": 450}}]}
+            else:
+                resp.json.return_value = {}
             return resp
 
         monkeypatch.setattr("requests.post", fake_post)

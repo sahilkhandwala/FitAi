@@ -29,8 +29,8 @@ def _get_logger():
 from config import (
     ANTHROPIC_MODEL_FAST,
     DISKCACHE_DIR,
-    FITBIT_CLIENT_ID,
-    FITBIT_CLIENT_SECRET,
+    GOOGLE_HEALTH_CLIENT_ID,
+    GOOGLE_HEALTH_CLIENT_SECRET,
     TELEGRAM_BOT_TOKEN,
     TELEGRAM_CHAT_ID,
     WEATHER_LAT,
@@ -80,11 +80,29 @@ def _on_flow_failure(flow, flow_run, state):
         pass
 
 
+def _refresh_token(token_data: dict) -> dict:
+    """Exchange refresh_token for a new access_token via Google OAuth."""
+    resp = requests.post(
+        "https://oauth2.googleapis.com/token",
+        data={
+            "grant_type": "refresh_token",
+            "refresh_token": token_data["refresh_token"],
+            "client_id": GOOGLE_HEALTH_CLIENT_ID,
+            "client_secret": GOOGLE_HEALTH_CLIENT_SECRET,
+        },
+        timeout=10,
+    )
+    resp.raise_for_status()
+    new_tokens = resp.json()
+    token_data = {**token_data, **new_tokens}
+    return token_data
+
+
 @task
-def fetch_fitbit_data(date_str: str) -> dict:
+def fetch_health_data(date_str: str) -> dict:
     """
-    Fetch Fitbit steps + sleep for the given date using a cached OAuth2 token.
-    Token is stored in diskcache under key 'fitbit_token'.
+    Fetch steps + sleep for the given date via Google Health API.
+    Token is stored in diskcache under key 'health_api_token'.
     Returns dict with keys: steps, sleep_minutes.
     """
     import diskcache
@@ -92,43 +110,67 @@ def fetch_fitbit_data(date_str: str) -> dict:
     logger = _get_logger()
 
     cache = diskcache.Cache(DISKCACHE_DIR)
-    token_data = cache.get("fitbit_token")
+    token_data = cache.get("health_api_token")
     if not token_data:
-        logger.warning("No Fitbit token in cache — returning zero data")
+        logger.warning("No Google Health token in cache — returning zero data")
         return {"steps": 0, "sleep_minutes": 0}
+
+    # Refresh token if expired (Google tokens last 1hr)
+    import time
+    if token_data.get("expires_at", 0) < time.time() + 60:
+        try:
+            token_data = _refresh_token(token_data)
+            token_data["expires_at"] = time.time() + token_data.get("expires_in", 3600)
+            cache.set("health_api_token", token_data)
+        except Exception as e:
+            logger.warning(f"Token refresh failed: {e}")
 
     access_token = token_data.get("access_token", "")
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    # Steps
+    # Date range for dailyRollUp: [date_str, next day)
+    from datetime import date, timedelta
+    d = date.fromisoformat(date_str)
+    next_day = (d + timedelta(days=1)).isoformat()
+
+    # Steps via dailyRollUp
     steps = 0
     try:
-        resp = requests.get(
-            f"https://api.fitbit.com/1/user/-/activities/steps/date/{date_str}/1d.json",
+        resp = requests.post(
+            "https://health.googleapis.com/v4/users/me/dataTypes/steps/dataPoints:dailyRollUp",
             headers=headers,
+            json={"range": {"startTime": date_str, "endTime": next_day}},
             timeout=10,
         )
         resp.raise_for_status()
-        data = resp.json()
-        steps_list = data.get("activities-steps", [])
-        if steps_list:
-            steps = int(steps_list[0].get("value", 0))
+        points = resp.json().get("rollupDataPoints", [])
+        if points:
+            steps = int(points[0].get("steps", {}).get("count_sum", 0))
     except Exception as e:
-        logger.warning(f"Fitbit steps fetch failed: {e}")
+        logger.warning(f"Health API steps fetch failed: {e}")
 
-    # Sleep
+    # Sleep via dailyRollUp
     sleep_minutes = 0
     try:
-        resp = requests.get(
-            f"https://api.fitbit.com/1.2/user/-/sleep/date/{date_str}.json",
+        resp = requests.post(
+            "https://health.googleapis.com/v4/users/me/dataTypes/sleep/dataPoints:dailyRollUp",
             headers=headers,
+            json={"range": {"startTime": date_str, "endTime": next_day}},
             timeout=10,
         )
         resp.raise_for_status()
-        data = resp.json()
-        sleep_minutes = data.get("sleep", {}).get("summary", {}).get("totalTimeInBed", 0)
+        points = resp.json().get("rollupDataPoints", [])
+        if points:
+            sleep_val = points[0].get("sleep", {})
+            # Try known field names; Google Health uses totalSleepMinutes or minutesAsleep
+            sleep_minutes = int(
+                sleep_val.get("totalSleepMinutes")
+                or sleep_val.get("minutesAsleep")
+                or sleep_val.get("totalTimeInBed")
+                or 0
+            )
     except Exception as e:
-        logger.warning(f"Fitbit sleep fetch failed: {e}")
+        logger.warning(f"Health API sleep fetch failed: {e}")
 
     return {"steps": steps, "sleep_minutes": sleep_minutes}
 
@@ -245,7 +287,7 @@ def morning_report_flow():
     now_la = datetime.now(LA)
     yesterday_str = (now_la - timedelta(days=1)).strftime("%Y-%m-%d")
 
-    fitbit_data = fetch_fitbit_data(yesterday_str)
+    fitbit_data = fetch_health_data(yesterday_str)
     weather_data = fetch_weather()
     message = build_morning_message(fitbit_data, weather_data)
     send_telegram(message)
