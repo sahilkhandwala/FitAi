@@ -1,5 +1,5 @@
 [Unit]
-Description=Prefect Worker
+Description=Prefect Flow Runner (serve)
 After=network.target prefect-server.service
 Requires=prefect-server.service
 
@@ -8,9 +8,10 @@ Type=simple
 User=root
 WorkingDirectory=/opt/nutrition-bot
 Environment="PATH=/opt/nutrition-bot/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/nutrition-bot"
 EnvironmentFile=/opt/nutrition-bot/.env
 ExecStartPre=/bin/sleep 10
-ExecStart=/opt/nutrition-bot/venv/bin/prefect worker start --pool default-process-pool
+ExecStart=/opt/nutrition-bot/venv/bin/python deployment/deploy_flows.py
 Restart=always
 RestartSec=15
 StandardOutput=journal
