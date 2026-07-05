@@ -1,6 +1,7 @@
 # Secrets
 .env
 *.env
+scripts/health_token.json
 
 # Cache
 .cache/
