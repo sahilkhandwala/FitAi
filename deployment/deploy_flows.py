@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("PREFECT_API_URL", "http://127.0.0.1:4200/api")
 
 from prefect import serve
+from prefect.client.schemas.schedules import CronSchedule
 from flows.morning_report import morning_report_flow
 from flows.alerts import lunch_alert_flow, dinner_alert_flow
 from flows.daily_summary import daily_summary_flow
@@ -21,36 +22,31 @@ from flows.weekly_report import weekly_report_flow
 
 
 async def main():
+    LA = "America/Los_Angeles"
     await serve(
         morning_report_flow.to_deployment(
             name="morning-report",
-            cron="30 10 * * *",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="30 10 * * *", timezone=LA)],
         ),
         lunch_alert_flow.to_deployment(
             name="lunch-alert",
-            cron="0 15 * * *",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="0 15 * * *", timezone=LA)],
         ),
         dinner_alert_flow.to_deployment(
             name="dinner-alert",
-            cron="30 22 * * *",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="30 22 * * *", timezone=LA)],
         ),
         daily_summary_flow.to_deployment(
             name="daily-summary",
-            cron="30 23 * * *",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="30 23 * * *", timezone=LA)],
         ),
         semantic_extraction_flow.to_deployment(
             name="semantic-extraction",
-            cron="0 18 * * 0",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="0 18 * * 0", timezone=LA)],
         ),
         weekly_report_flow.to_deployment(
             name="weekly-report",
-            cron="0 20 * * 0",
-            timezone="America/Los_Angeles",
+            schedules=[CronSchedule(cron="0 20 * * 0", timezone=LA)],
         ),
     )
 
