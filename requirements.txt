@@ -1,4 +1,4 @@
-python-telegram-bot==20.*
+python-telegram-bot[job-queue]==20.*
 langgraph>=0.4.0
 langgraph-checkpoint-sqlite<3.0.0
 langchain-anthropic
