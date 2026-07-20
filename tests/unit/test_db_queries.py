@@ -182,7 +182,10 @@ class TestDailyHealthLogs:
         assert row is None
 
     def test_get_last_n_days_health(self, session):
-        for d in ("2026-06-18", "2026-06-19", "2026-06-20"):
+        from datetime import datetime, timedelta
+        today = datetime.now(ZoneInfo("America/Los_Angeles")).date()
+        for delta in (2, 1, 0):
+            d = str(today - timedelta(days=delta))
             queries.upsert_daily_health_log(
                 session,
                 date=d,
@@ -643,9 +646,11 @@ class TestWeeklyReports:
 
 class TestPatterns:
     def test_insert_pattern(self, session):
+        from datetime import datetime
+        today = str(datetime.now(ZoneInfo("America/Los_Angeles")).date())
         queries.insert_pattern(
             session,
-            date="2026-06-20",
+            date=today,
             pattern_type="high_gi_streak",
             streak_days=3,
         )
